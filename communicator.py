@@ -91,10 +91,44 @@ class Communicator(object):
         parameters['token'] = token
         parameters['itemid'] = itemid
         parameters['filename'] = filename
+        if not checksum == None:
+            parameters['checksum'] = checksum
         response = self.makeRequest('midas.upload.generatetoken', parameters)
         return response
 
-    def createItem():
+    def createItem(self, token, name, parentid, description=None, uuid=None,
+                   privacy='Public'):
         """
+        BROKEN HACK TODO FIXME
         """
-        
+        parameters = dict()
+        parameters['token'] = token
+        parameters['name'] = name
+        parameters['parentid'] = parentid
+        parameters['privacy'] = privacy
+        if not description == None:
+            parameters['description'] = description
+        if not uuid == None:
+            parameters['uuid'] = uuid
+        response = self.makeRequest('midas.item.create', parameters)
+        return response
+
+    def performUpload(self, uploadtoken, filename, length, mode=None,
+                      folderid=None, itemid=None, revision=None):
+        """
+        BROKEN HACK TODO FIXME
+        """
+        parameters = dict()
+        parameters['uploadtoken'] = uploadtoken
+        parameters['filename'] = filename
+        parameters['length'] = length
+        if not mode == None:
+            parameters['mode'] = mode
+        if not folderid == None:
+            parameters['folderid'] = folderid
+        if not itemid == None:
+            parameters['itemid'] = itemid
+        if not revision == None:
+            parameters['revision'] = revision
+        response = self.makeRequest('midas.upload.perform', parameters)
+        return response
