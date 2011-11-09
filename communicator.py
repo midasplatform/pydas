@@ -1,5 +1,6 @@
 import simplejson as json
 import requests as http
+import os
 from exceptions import PydasException
 
 class Communicator(object):
@@ -14,21 +15,20 @@ class Communicator(object):
         self.apiSuffix = '/api/json?method='
         self.serverUrl = url
 
-    def makeRequest(self, method, parameters=None):
+    def makeRequest(self, method, parameters=None, file=None):
         """
         Do the generic processing of a request to the server
         """
         url = self.serverUrl + self.apiSuffix + method
         request = None
-        if parameters:
-            request = http.post(url, headers=parameters)
+        if file:
+            request = http.put(url, data=file.read(), params=parameters)
         else:
-            request = http.post(url, headers=parameters)
+            request = http.post(url, params=parameters)
         code = request.status_code
         if code != 200:
             raise PydasException("Request failed with HTTP error code "
                                  "%d" % code)
-
         response = json.loads(request.content)
 
         if response['stat'] != 'ok':
@@ -130,5 +130,6 @@ class Communicator(object):
             parameters['itemid'] = itemid
         if not revision == None:
             parameters['revision'] = revision
-        response = self.makeRequest('midas.upload.perform', parameters)
+        file = open(filename)
+        response = self.makeRequest('midas.upload.perform', parameters, file)
         return response
