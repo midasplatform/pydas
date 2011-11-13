@@ -113,7 +113,7 @@ class Communicator(object):
         response = self.makeRequest('midas.item.create', parameters)
         return response
 
-    def performUpload(self, uploadtoken, filename, length, mode=None,
+    def performUpload(self, uploadtoken, filename, length, filepath=None, mode=None,
                       folderid=None, itemid=None, revision=None):
         """
         BROKEN HACK TODO FIXME
@@ -130,6 +130,9 @@ class Communicator(object):
             parameters['itemid'] = itemid
         if not revision == None:
             parameters['revision'] = revision
-        file = open(filename)
+        if not filepath == None:
+            file = open(filepath)
+        else:
+            file = open(filename)
         response = self.makeRequest('midas.upload.perform', parameters, file)
         return response
