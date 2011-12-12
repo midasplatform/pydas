@@ -14,6 +14,7 @@ class Communicator(object):
         """
         self.apiSuffix = '/api/json?method='
         self.serverUrl = url
+        self.debug = False
 
     def makeRequest(self, method, parameters=None, file=None):
         """
@@ -26,6 +27,8 @@ class Communicator(object):
         else:
             request = http.post(url, params=parameters)
         code = request.status_code
+        if self.debug:
+            print request.content
         if code != 200:
             raise PydasException("Request failed with HTTP error code "
                                  "%d" % code)
@@ -82,6 +85,25 @@ class Communicator(object):
         parameters['token'] = token
         response = self.makeRequest('midas.user.folders', parameters)
         return response
+
+    def createFolder(self, token, name, parent, description=None,
+                     uuid=None, privacy=None):
+        """
+        Create a folder
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['name'] = name
+        parameters['parentid'] = parent
+        if description:
+            parameters['description'] = description
+        else:
+            parameters['desrciption'] = ''
+        if uuid:
+            parameters['uuid'] = uuid
+        if privacy:
+            parameters['privacy'] = privacy
+        response = self.makeRequest('midas.folder.create', parameters)
     
     def generateUploadToken(self, token, itemid, filename, checksum=None):
         """
@@ -99,7 +121,7 @@ class Communicator(object):
     def createItem(self, token, name, parentid, description=None, uuid=None,
                    privacy='Public'):
         """
-        BROKEN HACK TODO FIXME
+        Create an item to hold bitstreams.
         """
         parameters = dict()
         parameters['token'] = token
@@ -113,10 +135,11 @@ class Communicator(object):
         response = self.makeRequest('midas.item.create', parameters)
         return response
 
-    def performUpload(self, uploadtoken, filename, length, filepath=None, mode=None,
-                      folderid=None, itemid=None, revision=None):
+    def performUpload(self, uploadtoken, filename, length, filepath=None,
+                      mode=None, folderid=None, itemid=None, revision=None):
         """
-        BROKEN HACK TODO FIXME
+        Upload a file into a given item (or just to the public folder if the
+        item is not specified.
         """
         parameters = dict()
         parameters['uploadtoken'] = uploadtoken
@@ -130,9 +153,26 @@ class Communicator(object):
             parameters['itemid'] = itemid
         if not revision == None:
             parameters['revision'] = revision
+        
+        # We may want a different name than path
         if not filepath == None:
             file = open(filepath)
         else:
             file = open(filename)
+
         response = self.makeRequest('midas.upload.perform', parameters, file)
         return response
+
+    def getItemMetadata(self, item, token=None, revision=None):
+        """
+        Get the metadata associated with an item.
+        """
+        parameters = dict()
+        parameters['id'] = item
+        if token:
+            parameters['token'] = token
+        if revision:
+            parameters['revision'] = revision
+        response = self.makeRequest('midas.item.getmetadata', parameters)
+        return response
+
