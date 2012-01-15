@@ -1,4 +1,4 @@
-import simplejson
-import urllib
-from communicator import Communicator
-
+"""
+Python module for communicating with a midas server
+"""
+__all__ = ['drivers', 'core', 'exceptions']

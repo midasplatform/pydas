@@ -1,13 +1,17 @@
+"""
+Modules for defining exceptions in pydas
+"""
 
 class PydasException(Exception):
     """
-    Custom exception to throw within pydas
+    Base class for exception to throw within pydas
     """
 
     def __init__(self, value):
         """
         Override the constructor to support a basic message
         """
+        super(PydasException, self).__init__()
         self.value = value
 
     def __str__(self):
