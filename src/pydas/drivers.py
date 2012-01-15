@@ -5,6 +5,7 @@ functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
 import simplejson as json
 import requests as http
+import os
 from pydas.exceptions import PydasException
 
 class BaseDriver(object):
@@ -127,7 +128,7 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['name'] = name
         parameters['parentid'] = parent
-        parameters['desrciption'] = ''
+        parameters['description'] = ''
         optional_keys = ('description', 'uuid', 'privacy')
         for key in optional_keys:
             if kwargs.has_key(key):
@@ -146,7 +147,7 @@ class CoreDriver(BaseDriver):
         if not checksum == None:
             parameters['checksum'] = checksum
         response = self.request('midas.upload.generatetoken', parameters)
-        return response
+        return response['token']
 
     def create_item(self, token, name, parentid, **kwargs):
         """
@@ -164,7 +165,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.create', parameters)
         return response
 
-    def perform_upload(self, uploadtoken, filename, length, **kwargs):
+    def perform_upload(self, uploadtoken, filename, **kwargs):
         """
         Upload a file into a given item (or just to the public folder if the
         item is not specified.
@@ -172,7 +173,7 @@ class CoreDriver(BaseDriver):
         parameters = dict()
         parameters['uploadtoken'] = uploadtoken
         parameters['filename'] = filename
-        parameters['length'] = length
+        parameters['revision'] = 'head'
 
         optional_keys = ('mode', 'folderid', 'itemid', 'revision')
         for key in optional_keys:
@@ -184,6 +185,9 @@ class CoreDriver(BaseDriver):
             file_payload = open(kwargs['filepath'])
         else:
             file_payload = open(filename)
+        # Arcane getting of the file size using fstat. More details can be
+        # found in the python library docs
+        parameters['length'] = os.fstat(file_payload.fileno()).st_size
 
         response = self.request('midas.upload.perform', parameters,
                                 file_payload)
