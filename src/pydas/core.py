@@ -8,7 +8,7 @@ class Communicator(object):
     """
     Class for communicating with the Midas server through its drivers.
     """
-    
+
     def __init__(self, url, drivers=None):
         """
         Constructor that takes a midas url and an optional list of drivers
@@ -17,7 +17,7 @@ class Communicator(object):
         if drivers is None:
             self._drivers = [pydas.drivers.CoreDriver(url), pydas.drivers.BatchmakeDriver(url)]
         self._url = url
-    
+
     def __getattr__(self, name):
         """
         Called when a function does not exist in the class. We pass it down
