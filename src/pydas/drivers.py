@@ -206,3 +206,34 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.getmetadata', parameters)
         return response
 
+class BatchmakeDriver(BaseDriver):
+    """
+    Driver for the Midas batchmake batchmake module's API methods.
+    """
+
+    def add_condor_dag(self, token, batchmaketaskid, dagfilename, dagmanoutfilename):
+        """
+        Adds a condor dag to the given batchmake task
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['batchmaketaskid'] = batchmaketaskid
+        parameters['dagfilename'] = dagfilename
+        parameters['outfilename'] = dagmanoutfilename
+        response = self.request('midas.batchmake.add.condor.dag', parameters)
+        return response
+
+    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename, postfilename):
+        """
+        Adds a condor dag job to the condor dag associated with this batchmake task
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['batchmaketaskid'] = batchmaketaskid
+        parameters['jobdefinitionfilename'] = jobdefinitionfilename
+        parameters['outputfilename'] = outputfilename
+        parameters['errorfilename'] = errorfilename
+        parameters['logfilename'] = logfilename
+        parameters['postfilename'] = postfilename
+        response = self.request('midas.batchmake.add.condor.job', parameters)
+        return response
