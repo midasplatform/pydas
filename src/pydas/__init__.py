@@ -23,14 +23,14 @@ def login(url=None):
     pydas.communicator = pydas.core.Communicator(url)
     pydas.email = raw_input('Email: ')
     password = getpass.getpass('Password: ')
-    pydas.api_key = communicator.get_default_api_key(pydas.email, password)
+    pydas.api_key = pydas.communicator.get_default_api_key(pydas.email, password)
     return renew_token()
 
 def renew_token():
     """
     Renew or get a token to use for transactions with Midas.
     """
-    pydas.token = pydas.communicator.login_with_api_key(email, pydas.api_key)
+    pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key)
     return pydas.token
 
 def _upload_as_item(local_file, parent_folder_id, file_path):
