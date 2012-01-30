@@ -165,6 +165,16 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.create', parameters)
         return response
 
+    def delete_item(self, token, item_id):
+        """
+        Delete the item with the passed in item_id.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        response = self.request('midas.item.delete', parameters)
+        return response
+
     def perform_upload(self, uploadtoken, filename, **kwargs):
         """
         Upload a file into a given item (or just to the public folder if the
