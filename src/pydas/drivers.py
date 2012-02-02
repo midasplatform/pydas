@@ -175,6 +175,16 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.delete', parameters)
         return response
 
+    def folder_children(self, token, folder_id):
+        """
+        Get the non-recursive children of the passed in folder_id.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = folder_id
+        response = self.request('midas.folder.children', parameters)
+        return response
+
     def perform_upload(self, uploadtoken, filename, **kwargs):
         """
         Upload a file into a given item (or just to the public folder if the
