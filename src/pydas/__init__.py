@@ -14,16 +14,28 @@ pydas.email = None
 pydas.api_key = None
 pydas.token = None
 
-def login(url=None):
+def login(email=None, password=None, api_key=None, url=None):
     """
     Do the legwork of logging into Midas, storing the api_key and token
     """
     if url is None:
         url = raw_input('Server URL: ')
     pydas.communicator = pydas.core.Communicator(url)
-    pydas.email = raw_input('Email: ')
-    password = getpass.getpass('Password: ')
-    pydas.api_key = pydas.communicator.get_default_api_key(pydas.email, password)
+
+    if email is None:
+        pydas.email = raw_input('Email: ')
+    else:
+        pydas.email = email
+    if api_key is None:
+        if password is None:
+            pydas.password = getpass.getpass('Password: ')
+        else:
+            pydas.password = password
+        pydas.api_key = pydas.communicator.get_default_api_key(pydas.email,
+                                                               pydas.password)
+    else:
+        pydas.api_key = api_key
+
     return renew_token()
 
 def renew_token():
