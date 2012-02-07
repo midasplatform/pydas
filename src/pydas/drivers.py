@@ -228,7 +228,7 @@ class CoreDriver(BaseDriver):
 
 class BatchmakeDriver(BaseDriver):
     """
-    Driver for the Midas batchmake batchmake module's API methods.
+    Driver for the Midas batchmake module's API methods.
     """
 
     def add_condor_dag(self, token, batchmaketaskid, dagfilename, dagmanoutfilename):
@@ -256,4 +256,20 @@ class BatchmakeDriver(BaseDriver):
         parameters['logfilename'] = logfilename
         parameters['postfilename'] = postfilename
         response = self.request('midas.batchmake.add.condor.job', parameters)
+        return response
+
+
+class DicomextractorDriver(BaseDriver):
+    """
+    Driver for the Midas dicomextractor module's API methods.
+    """
+
+    def extract_dicommetadata(self, token, itemid):
+        """
+        Extracts dicom metadata from the given item
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['item'] = itemid
+        response = self.request('midas.dicomextractor.extract', parameters)
         return response
