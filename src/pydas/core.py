@@ -16,6 +16,8 @@ class Communicator(object):
         """
         if drivers is None:
             self._drivers = [pydas.drivers.CoreDriver(url), pydas.drivers.BatchmakeDriver(url)]
+        else:
+            self._drivers = drivers
         self._url = url
 
     def __getattr__(self, name):
