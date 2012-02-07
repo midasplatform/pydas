@@ -15,7 +15,15 @@ class Communicator(object):
         to use
         """
         if drivers is None:
-            self._drivers = [pydas.drivers.CoreDriver(url), pydas.drivers.BatchmakeDriver(url)]
+            self._drivers = []
+            import inspect
+            baseDriverClass = pydas.drivers.BaseDriver 
+            for name, obj in inspect.getmembers(pydas.drivers):
+                if inspect.isclass(obj):
+                    classHierarchy = inspect.getmro(obj)
+                    if baseDriverClass in classHierarchy and obj != baseDriverClass:
+                        instance = obj(url)
+                        self._drivers.append(instance)
         else:
             self._drivers = drivers
         self._url = url
