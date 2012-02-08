@@ -3,6 +3,7 @@ This module is for the drivers that actually do the work of communication with
 the Midas server. Any drivers that are implemented should use the utility
 functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
+
 import simplejson as json
 import requests as http
 import os
@@ -43,9 +44,14 @@ class BaseDriver(object):
         return self._url + self._api_suffix
 
     def request(self, method, parameters=None, file_payload=None):
-        """
-        Do the generic processing of a request to the server. If file_payload
-        is specified, it will be PUT to the server.
+        """Do the generic processing of a request to the server.
+
+        If file_payload is specified, it will be PUT to the server.
+
+        :param method: String to be passed to the server indicating the desired method.
+        :param parameters: (optional) Dictionary to pass in the HTTP body.
+        :param file_payload: (optional) File-like object to be sent with the HTTP request
+        :returns: Dictionary representing the json response to the request.
         """
         method_url = self.full_url + method
         request = None
@@ -70,28 +76,38 @@ class BaseDriver(object):
         return response['data']
 
 class CoreDriver(BaseDriver):
-    """
-    Driver for the core API methods of Midas.
+    """Driver for the core API methods of Midas.
+
+    This contains all of the calls necessary to interact with a Midas instance
+    that has no plugins enabled (other than the web-api).
     """
 
     def get_server_version(self):
-        """
-        Get the version from the server
+        """Get the version from the server.
+
+        :returns: String version code from the server.
         """
         response = self.request('midas.version')
         return response['version']
 
     def get_server_info(self):
-        """
-        Get info from the server (this is an alias to getVersion on most
-        platforms, but it returns the whole dictionary).
+        """Get general server information.
+
+        The information provided includes enabled modules as well as enabled
+        web api functions.
+
+        :returns: Dictionary of dictionaries containing module and web-api information.
         """
         response = self.request('midas.info')
         return response['version']
 
     def get_default_api_key(self, email, password):
-        """
-        Gets the default api key given an email and password
+        """Get the default api key for a user.
+
+        :param email: The email of the user.
+        :param password: The user's password.
+
+        :returns: String api-key to confirm that it was fetched successfully.
         """
         parameters = dict()
         parameters['email'] = email
@@ -100,9 +116,14 @@ class CoreDriver(BaseDriver):
         return response['apikey']
 
     def login_with_api_key(self, email, apikey, application='Default'):
-        """
-        Login and get a token using an email and apikey. If you do not specify
-        a specific application, 'default' will be used
+        """ Login and get a token.
+
+        If you do not specify a specific application, 'Default' will be used.
+
+        :param email: The email of the user.
+        :param password: A valid api-key assigned to the user.
+        :param application: (optional) Application designated for this api key.
+        :returns: String of the token to be used for interaction with the api until expiration.
         """
         parameters = dict()
         parameters['email'] = email
@@ -112,8 +133,10 @@ class CoreDriver(BaseDriver):
         return response['token']
 
     def list_user_folders(self, token):
-        """
-        Use a users token to list the curent folders.
+        """List the folders in the users home area.
+
+        :param token: A valid token for the user in question.
+        :returns: List of dictionaries containing foder information.
         """
         parameters = dict()
         parameters['token'] = token
@@ -121,8 +144,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def create_folder(self, token, name, parent, **kwargs):
-        """
-        Create a folder
+        """Create a folder at the destination specified.
+
+        :param token: A valid token for the user in question.
+        :param name: The name of the folder to be created.
+        :param parent: The id of the targeted parent folder.
+        :param description: (optional) The description text of the folder.
+        :param uuid: (optional) The uuid for the folder. It will be generated if not given.
+        :param privacy: (optional) The privacy state of the folder ('Public' or 'Private').
+        :returns: Dictionary containing the details of the created folder.
         """
         parameters = dict()
         parameters['token'] = token
@@ -137,8 +167,17 @@ class CoreDriver(BaseDriver):
         return response
 
     def generate_upload_token(self, token, itemid, filename, checksum=None):
-        """
-        Generate a token to use for upload.
+        """Generate a token to use for upload.
+        
+        Midas uses a individual token for each upload. The token corresponds to
+        the file specified and that file only. Passing the MD5 checksum allows
+        the server to determine if the file is already in the assetstore.
+
+        :param token: A valid token for the user in question.
+        :param itemid: The id of the item in which to upload the file as a bitstream.
+        :param filename: The name of the file to generate the upload token for.
+        :param checksum: (optional) The checksum of the file to upload.
+        :returns: String of the upload token.
         """
         parameters = dict()
         parameters['token'] = token
@@ -150,8 +189,15 @@ class CoreDriver(BaseDriver):
         return response['token']
 
     def create_item(self, token, name, parentid, **kwargs):
-        """
-        Create an item to hold bitstreams.
+        """Create an item to the server.
+
+        :param token: A valid token for the user in question.
+        :param name: The name of the item to be created.
+        :param parentid: The id of the destination folder.
+        :param description: (optional) The description text of the item.
+        :param uuid: (optional) The uuid for the item. It will be generated if not given.
+        :param privacy: (optional) The privacy state of the item ('Public' or 'Private').
+        :returns: Dictionary containing the details of the created item.
         """
         parameters = dict()
         parameters['token'] = token
@@ -166,8 +212,11 @@ class CoreDriver(BaseDriver):
         return response
 
     def delete_item(self, token, item_id):
-        """
-        Delete the item with the passed in item_id.
+        """Delete the item with the passed in item_id.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to be deleted.
+        :returns: Dictionary of the response indicating success.
         """
         parameters = dict()
         parameters['token'] = token
@@ -176,8 +225,7 @@ class CoreDriver(BaseDriver):
         return response
 
     def folder_children(self, token, folder_id):
-        """
-        Get the non-recursive children of the passed in folder_id.
+        """Get the non-recursive children of the passed in folder_id.
         """
         parameters = dict()
         parameters['token'] = token
