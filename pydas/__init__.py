@@ -99,18 +99,18 @@ def _upload_folder_recursive(local_folder,
             for subdir in subdirs:
                 full_path = os.path.join(top_dir, subdir)
                 if leaf_folders_as_items and _has_only_files(full_path):
-                    print 'Creating Item %s/%s' % (parent_folder_name,
+                    print 'Creating Item: %s/%s' % (parent_folder_name,
                                                    full_path)
                     _upload_folder_as_item(full_path, current_parent_id)
                 else:
-                    print 'Creating Folder %s/%s' % (parent_folder_name,
+                    print 'Creating Folder: %s/%s' % (parent_folder_name,
                                                      full_path)
                     new_folder_id = _create_folder(subdir,
                                                    current_parent_id)
                     folder_id_dict[full_path] = new_folder_id
             for leaf_file in files:
                 full_path = os.path.join(top_dir, leaf_file)
-                print 'Uploading Item %s/%s' % (parent_folder_name, full_path)
+                print 'Uploading Item: %s/%s' % (parent_folder_name, full_path)
                 _upload_as_item(leaf_file,
                                 current_parent_id,
                                 full_path)
