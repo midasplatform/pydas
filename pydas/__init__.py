@@ -77,31 +77,80 @@ def _create_folder(local_folder, parent_folder_id):
 
 def _upload_folder_recursive(local_folder,
                              parent_folder_id,
-                             parent_folder_name):
+                             parent_folder_name,
+                             leaf_folders_as_items=False):
     """
     Function for using os.walk to recursively upload a folder an all of its
     decendants.
     """
-    new_folder_id = _create_folder(local_folder,
-                                   parent_folder_id)
-    folder_id_dict = dict()
-    folder_id_dict[local_folder] = new_folder_id
-    for top_dir, subdirs, files in os.walk(local_folder):
-        current_parent_id = folder_id_dict[top_dir]
-        for subdir in subdirs:
-            full_path = os.path.join(top_dir, subdir)
-            print 'Creating %s/%s' % (parent_folder_name, full_path)
-            new_folder_id = _create_folder(subdir,
-                                           current_parent_id)
-            folder_id_dict[full_path] = new_folder_id
-        for leaf_file in files:
-            full_path = os.path.join(top_dir, leaf_file)
-            print 'Uploading %s/%s' % (parent_folder_name, full_path)
-            _upload_as_item(leaf_file,
-                            current_parent_id,
-                            full_path)
+    if leaf_folders_as_items and _has_only_files(local_folder):
+        print 'Creating Item: %s/%s' % (parent_folder_name, local_folder)
+        _upload_folder_as_item(local_folder, parent_folder_id)
+        return
+    else:
+        print 'Creating Folder: %s/%s' % (parent_folder_name, local_folder)
+        new_folder_id = _create_folder(local_folder,
+                                       parent_folder_id)
+        folder_id_dict = dict()
+        folder_id_dict[local_folder] = new_folder_id
+        for top_dir, subdirs, files in os.walk(local_folder):
+            if folder_id_dict.has_key(top_dir):
+                current_parent_id = folder_id_dict[top_dir]
+            for subdir in subdirs:
+                full_path = os.path.join(top_dir, subdir)
+                if leaf_folders_as_items and _has_only_files(full_path):
+                    print 'Creating Item %s/%s' % (parent_folder_name,
+                                                   full_path)
+                    _upload_folder_as_item(full_path, current_parent_id)
+                else:
+                    print 'Creating Folder %s/%s' % (parent_folder_name,
+                                                     full_path)
+                    new_folder_id = _create_folder(subdir,
+                                                   current_parent_id)
+                    folder_id_dict[full_path] = new_folder_id
+            for leaf_file in files:
+                full_path = os.path.join(top_dir, leaf_file)
+                print 'Uploading Item %s/%s' % (parent_folder_name, full_path)
+                _upload_as_item(leaf_file,
+                                current_parent_id,
+                                full_path)
 
-def upload(file_pattern, destination = 'Private'):
+def _has_only_files(local_folder):
+    """Returns whether a folder has only files. This will be false if the
+    folder contains any subdirectories."""
+    for entry in os.listdir(local_folder):
+        full_entry = os.path.join(local_folder, entry)
+        if os.path.isdir(full_entry):
+            return False
+    return True
+    
+def _upload_folder_as_item(local_folder, parent_folder_id):
+    """will take a filesystem directory subdir, a subdirectory of top_dir,
+       will try to create a midas item under parent_folder_id,
+       then upload all files in that subdirectory as a bitstream of the
+       newly created item"""
+    # create the item for the subdir
+    new_item = pydas.communicator.create_item(pydas.token,
+                                              os.path.basename(local_folder),
+                                              parent_folder_id)
+    item_id = new_item['item_id']
+    subdircontents = os.listdir(local_folder)
+    # for each file in the subdir, add it to the item
+    filecount = len(subdircontents)
+    for (ind, current_file) in enumerate(subdircontents):
+        print "Uploading Bitstream: %s (%d of %d)" % (current_file,
+                                                     ind+1,
+                                                     filecount)
+        filepath = os.path.join(local_folder, current_file)
+        upload_token = pydas.communicator.generate_upload_token(pydas.token,
+                                                                item_id,
+                                                                current_file)
+        pydas.communicator.perform_upload(upload_token,
+                                          current_file,
+                                          filepath = filepath,
+                                          itemid = item_id)
+
+def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
     """
     Upload a pattern of files. This will recursively walk down every tree in
     the file pattern to create a hierarchy on the server. As of right now, this
@@ -128,12 +177,12 @@ def upload(file_pattern, destination = 'Private'):
 
     for current_file in glob.iglob(file_pattern):
         if os.path.isfile(current_file):
-            print 'Uploading %s/%s' % (parent_folder_name, current_file)
+            print 'Uploading Item: %s/%s' % (parent_folder_name, current_file)
             _upload_as_item(os.path.basename(current_file),
                             parent_folder_id,
                             current_file)
         else:
-            print 'Creating %s/%s' % (parent_folder_name, current_file)
             _upload_folder_recursive(current_file,
                                      parent_folder_id,
-                                     parent_folder_name)
+                                     parent_folder_name,
+                                     leaf_folders_as_items)
