@@ -125,10 +125,12 @@ def _has_only_files(local_folder):
     return True
     
 def _upload_folder_as_item(local_folder, parent_folder_id):
-    """will take a filesystem directory subdir, a subdirectory of top_dir,
-       will try to create a midas item under parent_folder_id,
-       then upload all files in that subdirectory as a bitstream of the
-       newly created item"""
+    """Take a folder and use its base name as the name of a new item. Then,
+    upload its containing files into the new item as bitstreams.
+
+    :param local_folder: The path to the folder to be uploaded.
+    :param parent_folder_id: The id of the destination folder for the new item.
+    """
     # create the item for the subdir
     new_item = pydas.communicator.create_item(pydas.token,
                                               os.path.basename(local_folder),
