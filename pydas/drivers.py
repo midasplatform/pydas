@@ -8,6 +8,7 @@ import simplejson as json
 import requests as http
 import os
 from pydas.exceptions import PydasException
+import pydas.retry as retry
 
 class BaseDriver(object):
     """
@@ -21,6 +22,8 @@ class BaseDriver(object):
         self._api_suffix = '/api/json?method='
         self._url = url
         self._debug = False
+        self._email = ''
+        self._apikey = ''
 
     @property
     def url(self):
@@ -43,6 +46,35 @@ class BaseDriver(object):
         """
         return self._url + self._api_suffix
 
+    @property
+    def email(self):
+        """
+        Get the last used email address
+        """
+        return self._email
+
+    @email.setter
+    def email(self, value):
+        """
+        Set the last used email address
+        """
+        self._email = value
+
+    @property
+    def apikey(self):
+        """
+        Get the last used api key
+        """
+        return self._apikey
+
+    @apikey.setter
+    def apikey(self, value):
+        """
+        Set the last used api key
+        """
+        self._apikey = value
+
+    @retry.reauth
     def request(self, method, parameters=None, file_payload=None):
         """Do the generic processing of a request to the server.
 
@@ -74,6 +106,23 @@ class BaseDriver(object):
                                  "%s: %s" % (response['code'],
                                              response['message']))
         return response['data']
+
+    def login_with_api_key(self, email, apikey, application='Default'):
+        """ Login and get a token.
+
+        If you do not specify a specific application, 'Default' will be used.
+
+        :param email: The email of the user.
+        :param password: A valid api-key assigned to the user.
+        :param application: (optional) Application designated for this api key.
+        :returns: String of the token to be used for interaction with the api until expiration.
+        """
+        parameters = dict()
+        parameters['email'] = self.email = email     # Cache the email
+        parameters['apikey'] = self.apikey = apikey  # Cache the api key
+        parameters['appname'] = application
+        response = self.request('midas.login', parameters)
+        return response['token']
 
 class CoreDriver(BaseDriver):
     """Driver for the core API methods of Midas.
@@ -114,23 +163,6 @@ class CoreDriver(BaseDriver):
         parameters['password'] = password
         response = self.request('midas.user.apikey.default', parameters)
         return response['apikey']
-
-    def login_with_api_key(self, email, apikey, application='Default'):
-        """ Login and get a token.
-
-        If you do not specify a specific application, 'Default' will be used.
-
-        :param email: The email of the user.
-        :param password: A valid api-key assigned to the user.
-        :param application: (optional) Application designated for this api key.
-        :returns: String of the token to be used for interaction with the api until expiration.
-        """
-        parameters = dict()
-        parameters['email'] = email
-        parameters['apikey'] = apikey
-        parameters['appname'] = application
-        response = self.request('midas.login', parameters)
-        return response['token']
 
     def list_user_folders(self, token):
         """List the folders in the users home area.
