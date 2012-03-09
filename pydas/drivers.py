@@ -7,6 +7,7 @@ functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 import simplejson as json
 import requests as http
 import os
+import StringIO as sio
 from pydas.exceptions import PydasException
 import pydas.retry as retry
 
@@ -15,6 +16,10 @@ class BaseDriver(object):
     Base class for the midas api drivers.
     """
 
+    # Class members.
+    email = ''
+    apikey = ''
+
     def __init__(self, url=""):
         """
         Constructor
@@ -22,8 +27,6 @@ class BaseDriver(object):
         self._api_suffix = '/api/json?method='
         self._url = url
         self._debug = False
-        self._email = ''
-        self._apikey = ''
 
     @property
     def url(self):
@@ -47,32 +50,17 @@ class BaseDriver(object):
         return self._url + self._api_suffix
 
     @property
-    def email(self):
+    def debug(self):
+        """Return the debug state of the driver
         """
-        Get the last used email address
-        """
-        return self._email
+        return self._debug
 
-    @email.setter
-    def email(self, value):
+    @debug.setter
+    def debug(self, value):
+        """Setter for debug state
+        :param value: The value to set the debug state
         """
-        Set the last used email address
-        """
-        self._email = value
-
-    @property
-    def apikey(self):
-        """
-        Get the last used api key
-        """
-        return self._apikey
-
-    @apikey.setter
-    def apikey(self, value):
-        """
-        Set the last used api key
-        """
-        self._apikey = value
+        self._debug = value
 
     @retry.reauth
     def request(self, method, parameters=None, file_payload=None):
@@ -90,13 +78,16 @@ class BaseDriver(object):
         if file_payload:
             request = http.put(method_url,
                                data=file_payload.read(),
-                               params=parameters)
+                               params=parameters,
+                               allow_redirects=True)
         else:
-            request = http.post(method_url, params=parameters)
+            request = http.post(method_url,
+                                params=parameters,
+                                allow_redirects=True)
         code = request.status_code
         if self._debug:
             print request.content
-        if code != 200:
+        if code != 200 and code != 302:
             raise PydasException("Request failed with HTTP error code "
                                  "%d" % code)
         response = json.loads(request.content)
@@ -107,19 +98,19 @@ class BaseDriver(object):
                                              response['message']))
         return response['data']
 
-    def login_with_api_key(self, email, apikey, application='Default'):
+    def login_with_api_key(self, cur_email, cur_apikey, application='Default'):
         """ Login and get a token.
 
         If you do not specify a specific application, 'Default' will be used.
 
-        :param email: The email of the user.
-        :param password: A valid api-key assigned to the user.
+        :param cur_email: The email of the user.
+        :param cur_apikey: A valid api-key assigned to the user.
         :param application: (optional) Application designated for this api key.
         :returns: String of the token to be used for interaction with the api until expiration.
         """
         parameters = dict()
-        parameters['email'] = self.email = email     # Cache the email
-        parameters['apikey'] = self.apikey = apikey  # Cache the api key
+        parameters['email'] = BaseDriver.email = cur_email     # Cache email
+        parameters['apikey'] = BaseDriver.apikey = cur_apikey  # Cache api key
         parameters['appname'] = application
         response = self.request('midas.login', parameters)
         return response['token']
@@ -265,6 +256,19 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.children', parameters)
         return response
 
+    def folder_get(self, token, folder_id):
+        """Get the attributes of the specified folder.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the requested folder.
+        :returns: Dictionary of the folder attributes.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = folder_id
+        response = self.request('midas.folder.get', parameters)
+        return response
+
     def perform_upload(self, uploadtoken, filename, **kwargs):
         """
         Upload a file into a given item (or just to the public folder if the
@@ -304,6 +308,77 @@ class CoreDriver(BaseDriver):
         if revision:
             parameters['revision'] = revision
         response = self.request('midas.item.getmetadata', parameters)
+        return response
+
+    def download_item(self, item_id, token=None, revision=None):
+        """Download an item to disk
+        :param item_id: the id of the item to be downloaded
+        :param token: (optional) the authentication token of the user requesting the download
+        :param revision: (optional) the revision of the item to download, this defaults to HEAD
+        :returns: a tuple of the filename and the content iterator.
+        """
+        parameters = dict()
+        parameters['id'] = item_id
+        if token:
+            parameters['token'] = token
+        if revision:
+            parameters['revision'] = revision
+        method_url = self.full_url + 'midas.item.download'
+        request = http.get(method_url,
+                           params=parameters)
+        filename = request.headers['content-disposition'][21:].strip('"')
+        return (filename, request.iter_content())
+
+    def list_users(self, limit=20):
+        """List the public users in the system
+        :param limit: The number of users to fetch
+        :returns: The list of users
+        """
+        parameters = dict()
+        parameters['limit'] = limit
+        response = self.request('midas.user.list', parameters)
+        return response
+
+    def get_user_by_name(self, firstname, lastname):
+        """Get a user by the first and last name of that user.
+        :param firstname: The first name of the user
+        :param lastname: The last name of the user
+        :returns: The user requested
+        """
+        parameters = dict()
+        parameters['firstname'] = firstname
+        parameters['lastname'] = lastname
+        response = self.request('midas.user.get', parameters)
+        return response
+
+    def get_user_by_id(self, user_id):
+        """Get a user by the first and last name of that user.
+        :param user_id: The id of the desired user
+        :returns: The user requested
+        """
+        parameters = dict()
+        parameters['user_id'] = user_id
+        response = self.request('midas.user.get', parameters)
+        return response
+
+    def get_community_by_name(self, name):
+        """Get a community based on its name.
+        :param name: The name of the target communtity.
+        :returns: The requested community
+        """
+        parameters = dict()
+        parameters['name'] = name
+        response = self.request('midas.community.get', parameters)
+        return response
+
+    def get_community_by_id(self, community_id):
+        """Get a community based on its id.
+        :param community_id: The ide of the target communtity.
+        :returns: The requested community
+        """
+        parameters = dict()
+        parameters['id'] = community_id
+        response = self.request('midas.community.get', parameters)
         return response
 
 class BatchmakeDriver(BaseDriver):

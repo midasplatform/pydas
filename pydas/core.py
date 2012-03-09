@@ -70,3 +70,18 @@ class Communicator(object):
         Delete the url.
         """
         del self._url
+
+    @property
+    def debug(self):
+        """Return the debug state of all drivers by logically anding them.
+        """
+        return reduce(lambda x, y: x.debug and y.debug, self.drivers)
+
+    @debug.setter
+    def debug(self, value):
+        """Set the debug state on all of the drivers attached to the
+        communicator.
+        """
+        for driver in self.drivers:
+            driver.debug = value
+        

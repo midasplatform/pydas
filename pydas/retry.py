@@ -15,7 +15,8 @@ def reauth(fn):
                 # renew the token
                 # get the instance of the CoreDriver and set it as "that"
                 that = args[0]
-                token = that.login_with_api_key(that.email, that.apikey)
+                token = that.login_with_api_key(that.__class__.email,
+                                                that.__class__.apikey)
                 # now fix up the arguments of the original call to use the renewed token
                 argsList = list(args)
                 argsList[2]['token'] = token

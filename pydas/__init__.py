@@ -13,6 +13,7 @@ pydas.communicator = None
 pydas.email = None
 pydas.api_key = None
 pydas.token = None
+pydas.item_upload_callbacks = []
 
 def login(email=None, password=None, api_key=None, url=None):
     """
@@ -45,6 +46,18 @@ def renew_token():
     pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key)
     return pydas.token
 
+def add_item_upload_callback(callback):
+    """Pass a function to be called when an item is created. This can be quite
+    useful for performing actions such as notifications of upload progress as
+    well as calling additional api functions.
+
+    :param callback: A function that takes two arguments. The first argument is
+    the communicator object of the current pydas context and the second is the
+    id of the item that was created to result in the callback function's
+    invocatation.
+    """
+    pydas.item_upload_callbacks.append(callback)
+
 def _upload_as_item(local_file, parent_folder_id, file_path):
     """
     Function for doing an upload of a file as an item. This should be a
@@ -63,6 +76,8 @@ def _upload_as_item(local_file, parent_folder_id, file_path):
                                       local_file,
                                       filepath = file_path,
                                       itemid = current_item_id)
+    for callback in pydas.item_upload_callbacks:
+        callback(pydas.communicator, current_item_id)
 
 def _create_folder(local_folder, parent_folder_id):
     """
@@ -151,6 +166,8 @@ def _upload_folder_as_item(local_folder, parent_folder_id):
                                           current_file,
                                           filepath = filepath,
                                           itemid = item_id)
+    for callback in pydas.item_upload_callbacks:
+        callback(pydas.communicator,item_id)
 
 def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
     """
@@ -188,3 +205,162 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
                                      parent_folder_id,
                                      parent_folder_name,
                                      leaf_folders_as_items)
+
+
+
+def _descend_folder_for_id(parsed_path, folder_id):
+    """Descend a parsed path to return a folder id starting from folder_id
+    
+    :param parsed_path: a list of folders from top to bottom of a hierarchy
+    :param folder_id: The id of the folder from which to start the decent
+    :returns: The id of the found folder or -1
+    """
+    if len(parsed_path) == 0:
+        return folder_id
+    if pydas.api_key:
+        pydas.renew_token()
+    else:
+        pydas.login()
+    base_folder = pydas.communicator.folder_get(pydas.token,
+                                                folder_id)
+    cur_folder_id = -1
+    for path_part in parsed_path:
+        cur_folder_id = base_folder['folder_id']
+        cur_children = pydas.communicator.folder_children(pydas.token,
+                                                          cur_folder_id)
+        found = False
+        for inner_folder in cur_children['folders']:
+            if inner_folder['name'] == path_part:
+                base_folder = pydas.communicator.folder_get(pydas.token,
+                                                            inner_folder['folder_id'])
+                cur_folder_id = base_folder['folder_id']
+                found = True
+                break
+        if not found:
+            return -1
+    return cur_folder_id
+
+def _search_folder_for_item_or_folder(name, folder_id):
+    """Find an item or folder matching the name (folder first if both are
+    present).
+
+    :param name: The name of the resource
+    :param folder_id: The folder to search within
+    :returns: A tuple indicating whether the resource is an item an the id of
+    said resoure. i.e. (True, item_id) or (False, folder_id). Note that in the
+    event that we do not find a result return (False, -1)
+    """
+    if pydas.api_key:
+        pydas.renew_token()
+    else:
+        pydas.login()
+    children = pydas.communicator.folder_children(pydas.token, folder_id)
+    for folder in children['folders']:
+        if folder['name'] == name:
+            return False, folder['folder_id'] # Found a folder
+    for item in children['items']:
+        if item['name'] == name:
+            return True, item['item_id'] # Found an item
+    return False, -1 # Found nothing
+                                                
+
+def _find_resource_id_from_path(path):
+    """Get a folder id from a path on the server.
+
+    Warning: This is NOT efficient at all.
+    
+    The schema for this path is:
+    path := "/users/<name>/" | "/communities/<name>" , {<subfolder>/}
+    name := <firstname> , "_" , <lastname>
+
+    :param path: The virtual path on the server.
+    :returns: a tuple indicating True or False about whether the resource is an
+    item and id of the resource i.e. (True, item_id) or (False, folder_id)
+    """
+    if pydas.api_key:
+        pydas.renew_token()
+    else:
+        pydas.login()
+    parsed_path = path.split('/')
+    if parsed_path[-1] == '':
+        parsed_path.pop()
+    if path.startswith('/users/'):
+        parsed_path.pop(0) # remove '' before /
+        parsed_path.pop(0) # remove 'users'
+        name = parsed_path.pop(0) # remove '<firstname>_<lastname>'
+        firstname, lastname = name.split('_')
+        end = parsed_path.pop()
+        user = pydas.communicator.get_user_by_name(firstname, lastname)
+        leaf_folder_id = _descend_folder_for_id(parsed_path, user['folder_id'])
+        return _search_folder_for_item_or_folder(end, leaf_folder_id)
+    elif path.startswith('/communities/'):
+        parsed_path.pop(0) # remove '' before /
+        parsed_path.pop(0) # remove 'communities'
+        community_name = parsed_path.pop(0) # remove '<community>'
+        end = parsed_path.pop()
+        community = pydas.communicator.get_community_by_name(community_name)
+        leaf_folder_id =  _descend_folder_for_id(parsed_path,
+                                                 community['folder_id'])
+        return _search_folder_for_item_or_folder(end, leaf_folder_id)
+    else:
+        return False, -1
+        
+    
+def _download_folder_recursive(folder_id, path='.'):
+    """Download a folder to the specified path along with any children.
+
+    :param folder_id: The id of the target folder
+    :param path: (optional) the location to download the folder
+    """
+    if pydas.api_key:
+        pydas.renew_token()
+    else:
+        pydas.login()
+    cur_folder = pydas.communicator.folder_get(pydas.token, folder_id)
+    folder_path = os.path.join(path, cur_folder['name'])
+    print 'Creating Folder: %s' % folder_path
+    os.mkdir(folder_path)
+    cur_children = pydas.communicator.folder_children(pydas.token, folder_id)
+    for item in cur_children['items']:
+        _download_item(item['item_id'], folder_path)
+    for folder in cur_children['folders']:
+        _download_folder_recursive(folder['folder_id'], folder_path)
+
+def _download_item(item_id, path='.'):
+    """Download the requested item to the specified path.
+
+    :param item_id: The id of the item to be downloaded
+    :param path: (optional) the location to download the item
+    """
+    if pydas.api_key:
+        pydas.renew_token()
+    else:
+        pydas.login()
+    filename, content_iter =  pydas.communicator.download_item(item_id,
+                                                               pydas.token)
+    item_path = os.path.join(path, filename)
+    print 'Creating File: %s' % item_path
+    outFile = open(item_path, 'wb')
+    for block in content_iter:
+        outFile.write(block)
+    outFile.close()
+
+def download(server_path, local_path = '.'):
+    """Recursively download a file or item from Midas.
+
+    :param server_path: The location on the server to find the resource to download
+    :param local_path: The location on the client to store the downloaded data
+    """
+    if pydas.api_key:
+        pydas.renew_token()
+    else:
+        pydas.login()
+    is_item, resource_id = _find_resource_id_from_path(server_path)
+    if resource_id == -1:
+        print 'Unable to locate: %s' % server_path
+    else:
+        if is_item:
+            _download_item(resource_id, local_path)
+        else:
+            _download_folder_recursive(resource_id, local_path)
+    
