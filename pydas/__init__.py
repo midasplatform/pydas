@@ -51,10 +51,10 @@ def add_item_upload_callback(callback):
     useful for performing actions such as notifications of upload progress as
     well as calling additional api functions.
 
-    :param callback: A function that takes two arguments. The first argument is
-    the communicator object of the current pydas context and the second is the
-    id of the item that was created to result in the callback function's
-    invocatation.
+    :param callback: A function that takes thre arguments. The first argument is
+    the communicator object of the current pydas context, the second is the
+    currently active API token and the third is the id of the item that was
+    created to result in the callback function's invocatation.
     """
     pydas.item_upload_callbacks.append(callback)
 
@@ -77,7 +77,7 @@ def _upload_as_item(local_file, parent_folder_id, file_path):
                                       filepath = file_path,
                                       itemid = current_item_id)
     for callback in pydas.item_upload_callbacks:
-        callback(pydas.communicator, current_item_id)
+        callback(pydas.communicator, pydas.token, current_item_id)
 
 def _create_folder(local_folder, parent_folder_id):
     """
@@ -86,7 +86,7 @@ def _create_folder(local_folder, parent_folder_id):
     renew tokens or anything fancy.
     """
     new_folder = pydas.communicator.create_folder(pydas.token,
-                                                  local_folder,
+                                                  os.path.basename(local_folder),
                                                   parent_folder_id)
     return new_folder['folder_id']
 
@@ -103,7 +103,8 @@ def _upload_folder_recursive(local_folder,
         _upload_folder_as_item(local_folder, parent_folder_id)
         return
     else:
-        print 'Creating Folder: %s/%s' % (parent_folder_name, local_folder)
+        print 'Creating Folder: %s/%s' % (parent_folder_name,
+                                          os.path.basename(local_folder))
         new_folder_id = _create_folder(local_folder,
                                        parent_folder_id)
         folder_id_dict = dict()
@@ -167,7 +168,7 @@ def _upload_folder_as_item(local_folder, parent_folder_id):
                                           filepath = filepath,
                                           itemid = item_id)
     for callback in pydas.item_upload_callbacks:
-        callback(pydas.communicator,item_id)
+        callback(pydas.communicator, pydas.token, item_id)
 
 def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
     """

@@ -381,6 +381,18 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.community.get', parameters)
         return response
 
+    def search(self, search, token=None):
+        """Get the resources corresponding to a given query.
+        :param search: The search criterion
+        :param token: (option) The credentials to use when searching
+        """
+        parameters = dict()
+        parameters['search'] = search
+        if token != None:
+            parameters['token'] = token
+        response = self.request('midas.resource.search', parameters)
+        return response
+
 class BatchmakeDriver(BaseDriver):
     """
     Driver for the Midas batchmake module's API methods.
