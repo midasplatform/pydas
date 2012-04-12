@@ -1,6 +1,7 @@
 from distutils.core import setup
+import pydas
 setup(name='pydas',
-      version='0.2.1',
+      version=pydas.version,
       packages=['pydas'],
       author='Patrick Reynolds',
       author_email='patrick.reynolds@kitware.com',
