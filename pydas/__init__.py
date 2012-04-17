@@ -22,6 +22,7 @@ def login(email=None, password=None, api_key=None, url=None):
     """
     if url is None:
         url = raw_input('Server URL: ')
+    url = url.rstrip('/')
     pydas.communicator = pydas.core.Communicator(url)
 
     if email is None:
