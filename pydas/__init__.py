@@ -96,11 +96,9 @@ def _create_folder(local_folder, parent_folder_id):
 
 def _upload_folder_recursive(local_folder,
                              parent_folder_id,
-                             parent_folder_name,
                              leaf_folders_as_items=False):
     """
-    Function for using os.walk to recursively upload a folder an all of its
-    descendants.
+    Function to recursively upload a folder an all of its descendants.
     """
     if leaf_folders_as_items and _has_only_files(local_folder):
         print 'Creating Item from %s' % local_folder
@@ -110,40 +108,21 @@ def _upload_folder_recursive(local_folder,
         print 'Creating Folder from %s' % local_folder
         new_folder_id = _create_folder(local_folder,
                                        parent_folder_id)
-        folder_id_dict = dict()
-        folder_id_dict[local_folder] = new_folder_id
-        for top_dir, subdirs, files in os.walk(local_folder):
-            if folder_id_dict.has_key(top_dir):
-                current_parent_id = folder_id_dict[top_dir]
 
-            # create a list of subdirs not to visit as we have already seen
-            # them and added all files in them
-            subdirs_to_not_visit = []
-
-            for subdir in subdirs:
-                full_path = os.path.join(top_dir, subdir)
-                if leaf_folders_as_items and _has_only_files(full_path):
-                    print 'Creating Item from %s.' % full_path
-                    _upload_folder_as_item(full_path, current_parent_id)
-                    # the only subdirs we don't want to visit are those
-                    # that are leaves when we treat leaf folders as single items
-                    subdirs_to_not_visit.append(subdir)
-                else:
-                    print 'Creating Folder from %s.' % full_path
-                    new_folder_id = _create_folder(subdir,
-                                                   current_parent_id)
-                    folder_id_dict[full_path] = new_folder_id
-
-            # now remove those subdirs we shouldn't visit
-            for subdir in subdirs_to_not_visit:
-                subdirs.remove(subdir)
-
-            for leaf_file in files:
-                full_path = os.path.join(top_dir, leaf_file)
-                print 'Uploading Item from %s' % full_path
-                _upload_as_item(leaf_file,
-                                current_parent_id,
-                                full_path)
+        for entry in os.listdir(local_folder):
+            full_entry = os.path.join(local_folder, entry)
+            if os.path.islink(full_entry):
+                # os.walk skips symlinks by default
+                continue
+            elif os.path.isdir(full_entry):
+                _upload_folder_recursive(full_entry,
+                                        new_folder_id,
+                                        leaf_folders_as_items)
+            else:
+                print 'Uploading Item from %s' % full_entry
+                _upload_as_item(entry,
+                                parent_folder_id,
+                                full_entry)
 
 def _has_only_files(local_folder):
     """Returns whether a folder has only files. This will be false if the
@@ -199,17 +178,14 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
 
     # Logic for finding the proper folder to place the files in.
     parent_folder_id = None
-    parent_folder_name = None
     user_folders = pydas.communicator.list_user_folders(pydas.token)
     for cur_folder in user_folders:
         if cur_folder['name'] == destination:
             parent_folder_id = cur_folder['folder_id']
-            parent_folder_name = cur_folder['name']
     if parent_folder_id is None:
         print 'Unable to locate specified destination. ',
         print 'Defaulting to %s' % user_folders[0]['name']
         parent_folder_id = user_folders[0]['folder_id']
-        parent_folder_name = user_folders[0]['name']
 
     for current_file in glob.iglob(file_pattern):
         current_file = os.path.normpath(current_file)
@@ -221,7 +197,6 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
         else:
             _upload_folder_recursive(current_file,
                                      parent_folder_id,
-                                     parent_folder_name,
                                      leaf_folders_as_items)
 
 
