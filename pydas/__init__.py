@@ -1,5 +1,5 @@
 """
-Python module for communicating with a midas server
+Python module for communicating with a Midas server
 """
 __all__ = ['drivers', 'core', 'exceptions']
 
@@ -54,10 +54,10 @@ def add_item_upload_callback(callback):
     useful for performing actions such as notifications of upload progress as
     well as calling additional api functions.
 
-    :param callback: A function that takes thre arguments. The first argument is
+    :param callback: A function that takes three arguments. The first argument is
     the communicator object of the current pydas context, the second is the
     currently active API token and the third is the id of the item that was
-    created to result in the callback function's invocatation.
+    created to result in the callback function's invocation.
     """
     pydas.item_upload_callbacks.append(callback)
 
@@ -99,7 +99,7 @@ def _upload_folder_recursive(local_folder,
                              leaf_folders_as_items=False):
     """
     Function for using os.walk to recursively upload a folder an all of its
-    decendants.
+    descendants.
     """
     if leaf_folders_as_items and _has_only_files(local_folder):
         print 'Creating Item from %s' % local_folder
@@ -263,7 +263,7 @@ def _search_folder_for_item_or_folder(name, folder_id):
     :param name: The name of the resource
     :param folder_id: The folder to search within
     :returns: A tuple indicating whether the resource is an item an the id of
-    said resoure. i.e. (True, item_id) or (False, folder_id). Note that in the
+    said resource. i.e. (True, item_id) or (False, folder_id). Note that in the
     event that we do not find a result return (False, -1)
     """
     if pydas.api_key:

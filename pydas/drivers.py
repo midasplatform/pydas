@@ -14,7 +14,7 @@ import pydas.retry as retry
 
 class BaseDriver(object):
     """
-    Base class for the midas api drivers.
+    Base class for the Midas api drivers.
     """
 
     # Class members.
@@ -164,7 +164,7 @@ class CoreDriver(BaseDriver):
         """List the folders in the users home area.
 
         :param token: A valid token for the user in question.
-        :returns: List of dictionaries containing foder information.
+        :returns: List of dictionaries containing folder information.
         """
         parameters = dict()
         parameters['token'] = token
@@ -178,7 +178,7 @@ class CoreDriver(BaseDriver):
         :param name: The name of the folder to be created.
         :param parent: The id of the targeted parent folder.
         :param description: (optional) The description text of the folder.
-        :param uuid: (optional) The uuid for the folder. It will be generated if not given.
+        :param uuid: (optional) The UUID for the folder. It will be generated if not given.
         :param privacy: (optional) The privacy state of the folder ('Public' or 'Private').
         :returns: Dictionary containing the details of the created folder.
         """
@@ -223,7 +223,7 @@ class CoreDriver(BaseDriver):
         :param name: The name of the item to be created.
         :param parentid: The id of the destination folder.
         :param description: (optional) The description text of the item.
-        :param uuid: (optional) The uuid for the item. It will be generated if not given.
+        :param uuid: (optional) The UUID for the item. It will be generated if not given.
         :param privacy: (optional) The privacy state of the item ('Public' or 'Private').
         :returns: Dictionary containing the details of the created item.
         """
@@ -368,7 +368,7 @@ class CoreDriver(BaseDriver):
 
     def get_community_by_name(self, name):
         """Get a community based on its name.
-        :param name: The name of the target communtity.
+        :param name: The name of the target community.
         :returns: The requested community
         """
         parameters = dict()
@@ -378,7 +378,7 @@ class CoreDriver(BaseDriver):
 
     def get_community_by_id(self, community_id):
         """Get a community based on its id.
-        :param community_id: The ide of the target communtity.
+        :param community_id: The id of the target community.
         :returns: The requested community
         """
         parameters = dict()
@@ -438,7 +438,7 @@ class DicomextractorDriver(BaseDriver):
 
     def extract_dicommetadata(self, token, itemid):
         """
-        Extracts dicom metadata from the given item
+        Extracts DICOM metadata from the given item
         """
         parameters = dict()
         parameters['token'] = token

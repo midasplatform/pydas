@@ -11,7 +11,7 @@ class Communicator(object):
 
     def __init__(self, url, drivers=None):
         """
-        Constructor that takes a midas url and an optional list of drivers
+        Constructor that takes a Midas url and an optional list of drivers
         to use
         """
         if drivers is None:
