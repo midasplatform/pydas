@@ -17,7 +17,7 @@ class Communicator(object):
         if drivers is None:
             self._drivers = []
             import inspect
-            baseDriverClass = pydas.drivers.BaseDriver 
+            baseDriverClass = pydas.drivers.BaseDriver
             for name, obj in inspect.getmembers(pydas.drivers):
                 if inspect.isclass(obj):
                     classHierarchy = inspect.getmro(obj)
@@ -84,4 +84,3 @@ class Communicator(object):
         """
         for driver in self.drivers:
             driver.debug = value
-        

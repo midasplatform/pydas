@@ -152,9 +152,9 @@ def _has_only_files(local_folder):
         if os.path.isdir(full_entry):
             return False
     return True
-   
 
- 
+
+
 def _upload_folder_as_item(local_folder, parent_folder_id):
     """Take a folder and use its base name as the name of a new item. Then,
     upload its containing files into the new item as bitstreams.
@@ -226,7 +226,7 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
 
 def _descend_folder_for_id(parsed_path, folder_id):
     """Descend a parsed path to return a folder id starting from folder_id
-    
+
     :param parsed_path: a list of folders from top to bottom of a hierarchy
     :param folder_id: The id of the folder from which to start the decent
     :returns: The id of the found folder or -1
@@ -278,13 +278,13 @@ def _search_folder_for_item_or_folder(name, folder_id):
         if item['name'] == name:
             return True, item['item_id'] # Found an item
     return False, -1 # Found nothing
-                                                
+
 
 def _find_resource_id_from_path(path):
     """Get a folder id from a path on the server.
 
     Warning: This is NOT efficient at all.
-    
+
     The schema for this path is:
     path := "/users/<name>/" | "/communities/<name>" , {<subfolder>/}
     name := <firstname> , "_" , <lastname>
@@ -320,8 +320,8 @@ def _find_resource_id_from_path(path):
         return _search_folder_for_item_or_folder(end, leaf_folder_id)
     else:
         return False, -1
-        
-    
+
+
 def _download_folder_recursive(folder_id, path='.'):
     """Download a folder to the specified path along with any children.
 
@@ -379,4 +379,4 @@ def download(server_path, local_path = '.'):
             _download_item(resource_id, local_path)
         else:
             _download_folder_recursive(resource_id, local_path)
-    
+

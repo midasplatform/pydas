@@ -196,7 +196,7 @@ class CoreDriver(BaseDriver):
 
     def generate_upload_token(self, token, itemid, filename, checksum=None):
         """Generate a token to use for upload.
-        
+
         Midas uses a individual token for each upload. The token corresponds to
         the file specified and that file only. Passing the MD5 checksum allows
         the server to determine if the file is already in the assetstore.
