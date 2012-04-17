@@ -75,7 +75,7 @@ class Communicator(object):
     def debug(self):
         """Return the debug state of all drivers by logically anding them.
         """
-        return reduce(lambda x, y: x.debug and y.debug, self.drivers)
+        return all(driver.debug for driver in self.drivers)
 
     @debug.setter
     def debug(self, value):
