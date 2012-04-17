@@ -211,6 +211,7 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
         parent_folder_name = user_folders[0]['name']
 
     for current_file in glob.iglob(file_pattern):
+        current_file = os.path.normpath(current_file)
         if os.path.isfile(current_file):
             print 'Uploading Item from %s' % current_file
             _upload_as_item(os.path.basename(current_file),
