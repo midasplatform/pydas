@@ -127,11 +127,8 @@ def _upload_folder_recursive(local_folder,
 def _has_only_files(local_folder):
     """Returns whether a folder has only files. This will be false if the
     folder contains any subdirectories."""
-    for entry in os.listdir(local_folder):
-        full_entry = os.path.join(local_folder, entry)
-        if os.path.isdir(full_entry):
-            return False
-    return True
+    return not any(os.path.isdir(os.path.join(local_folder, entry))
+                    for entry in os.listdir(local_folder))
 
 
 
