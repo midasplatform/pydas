@@ -14,7 +14,7 @@ pydas.email = None
 pydas.api_key = None
 pydas.token = None
 pydas.item_upload_callbacks = []
-pydas.version = '0.2.2'
+pydas.version = '0.2.3'
 
 def login(email=None, password=None, api_key=None, url=None):
     """
@@ -46,6 +46,8 @@ def renew_token():
     """
     pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key)
     return pydas.token
+
+
 
 def add_item_upload_callback(callback):
     """Pass a function to be called when an item is created. This can be quite
@@ -112,16 +114,29 @@ def _upload_folder_recursive(local_folder,
         for top_dir, subdirs, files in os.walk(local_folder):
             if folder_id_dict.has_key(top_dir):
                 current_parent_id = folder_id_dict[top_dir]
+
+            # create a list of subdirs not to visit as we have already seen
+            # them and added all files in them
+            subdirs_to_not_visit = []
+
             for subdir in subdirs:
                 full_path = os.path.join(top_dir, subdir)
                 if leaf_folders_as_items and _has_only_files(full_path):
                     print 'Creating Item from %s.' % full_path
                     _upload_folder_as_item(full_path, current_parent_id)
+                    # the only subdirs we don't want to visit are those
+                    # that are leaves when we treat leaf folders as single items
+                    subdirs_to_not_visit.append(subdir)
                 else:
                     print 'Creating Folder from %s.' % full_path
                     new_folder_id = _create_folder(subdir,
                                                    current_parent_id)
                     folder_id_dict[full_path] = new_folder_id
+
+            # now remove those subdirs we shouldn't visit
+            for subdir in subdirs_to_not_visit:
+                subdirs.remove(subdir)
+
             for leaf_file in files:
                 full_path = os.path.join(top_dir, leaf_file)
                 print 'Uploading Item from %s' % full_path
@@ -137,7 +152,9 @@ def _has_only_files(local_folder):
         if os.path.isdir(full_entry):
             return False
     return True
-    
+   
+
+ 
 def _upload_folder_as_item(local_folder, parent_folder_id):
     """Take a folder and use its base name as the name of a new item. Then,
     upload its containing files into the new item as bitstreams.

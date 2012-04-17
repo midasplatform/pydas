@@ -11,6 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   intro
+   quickstart 
+
 .. automodule:: pydas
    :members:
 .. automodule:: pydas.core
