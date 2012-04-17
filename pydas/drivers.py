@@ -5,6 +5,7 @@ functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
 
 import simplejson as json
+import simplejson.decoder
 import requests as http
 import os
 import StringIO as sio
@@ -90,7 +91,11 @@ class BaseDriver(object):
         if code != 200 and code != 302:
             raise PydasException("Request failed with HTTP error code "
                                  "%d" % code)
-        response = json.loads(request.content)
+        try:
+            response = json.loads(request.content)
+        except simplejson.decoder.JSONDecodeError:
+            raise PydasException("Request failed with HTTP error code "
+                                 "%d and request.content %s" % (code, request.content))
 
         if response['stat'] != 'ok':
             raise PydasException("Request failed with Midas error code "
