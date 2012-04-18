@@ -19,4 +19,3 @@ class PydasException(Exception):
         Override the string method
         """
         return repr(self.value)
-
