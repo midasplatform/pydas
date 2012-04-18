@@ -1,5 +1,5 @@
 """
-Python module for communicating with a midas server
+Python module for communicating with a Midas server
 """
 __all__ = ['drivers', 'core', 'exceptions']
 
@@ -22,6 +22,7 @@ def login(email=None, password=None, api_key=None, url=None):
     """
     if url is None:
         url = raw_input('Server URL: ')
+    url = url.rstrip('/')
     pydas.communicator = pydas.core.Communicator(url)
 
     if email is None:
@@ -54,10 +55,10 @@ def add_item_upload_callback(callback):
     useful for performing actions such as notifications of upload progress as
     well as calling additional api functions.
 
-    :param callback: A function that takes thre arguments. The first argument is
+    :param callback: A function that takes three arguments. The first argument is
     the communicator object of the current pydas context, the second is the
     currently active API token and the third is the id of the item that was
-    created to result in the callback function's invocatation.
+    created to result in the callback function's invocation.
     """
     pydas.item_upload_callbacks.append(callback)
 
@@ -95,11 +96,9 @@ def _create_folder(local_folder, parent_folder_id):
 
 def _upload_folder_recursive(local_folder,
                              parent_folder_id,
-                             parent_folder_name,
                              leaf_folders_as_items=False):
     """
-    Function for using os.walk to recursively upload a folder an all of its
-    decendants.
+    Function to recursively upload a folder an all of its descendants.
     """
     if leaf_folders_as_items and _has_only_files(local_folder):
         print 'Creating Item from %s' % local_folder
@@ -109,52 +108,30 @@ def _upload_folder_recursive(local_folder,
         print 'Creating Folder from %s' % local_folder
         new_folder_id = _create_folder(local_folder,
                                        parent_folder_id)
-        folder_id_dict = dict()
-        folder_id_dict[local_folder] = new_folder_id
-        for top_dir, subdirs, files in os.walk(local_folder):
-            if folder_id_dict.has_key(top_dir):
-                current_parent_id = folder_id_dict[top_dir]
 
-            # create a list of subdirs not to visit as we have already seen
-            # them and added all files in them
-            subdirs_to_not_visit = []
-
-            for subdir in subdirs:
-                full_path = os.path.join(top_dir, subdir)
-                if leaf_folders_as_items and _has_only_files(full_path):
-                    print 'Creating Item from %s.' % full_path
-                    _upload_folder_as_item(full_path, current_parent_id)
-                    # the only subdirs we don't want to visit are those
-                    # that are leaves when we treat leaf folders as single items
-                    subdirs_to_not_visit.append(subdir)
-                else:
-                    print 'Creating Folder from %s.' % full_path
-                    new_folder_id = _create_folder(subdir,
-                                                   current_parent_id)
-                    folder_id_dict[full_path] = new_folder_id
-
-            # now remove those subdirs we shouldn't visit
-            for subdir in subdirs_to_not_visit:
-                subdirs.remove(subdir)
-
-            for leaf_file in files:
-                full_path = os.path.join(top_dir, leaf_file)
-                print 'Uploading Item from %s' % full_path
-                _upload_as_item(leaf_file,
-                                current_parent_id,
-                                full_path)
+        for entry in os.listdir(local_folder):
+            full_entry = os.path.join(local_folder, entry)
+            if os.path.islink(full_entry):
+                # os.walk skips symlinks by default
+                continue
+            elif os.path.isdir(full_entry):
+                _upload_folder_recursive(full_entry,
+                                        new_folder_id,
+                                        leaf_folders_as_items)
+            else:
+                print 'Uploading Item from %s' % full_entry
+                _upload_as_item(entry,
+                                parent_folder_id,
+                                full_entry)
 
 def _has_only_files(local_folder):
     """Returns whether a folder has only files. This will be false if the
     folder contains any subdirectories."""
-    for entry in os.listdir(local_folder):
-        full_entry = os.path.join(local_folder, entry)
-        if os.path.isdir(full_entry):
-            return False
-    return True
-   
+    return not any(os.path.isdir(os.path.join(local_folder, entry))
+                    for entry in os.listdir(local_folder))
 
- 
+
+
 def _upload_folder_as_item(local_folder, parent_folder_id):
     """Take a folder and use its base name as the name of a new item. Then,
     upload its containing files into the new item as bitstreams.
@@ -198,19 +175,17 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
 
     # Logic for finding the proper folder to place the files in.
     parent_folder_id = None
-    parent_folder_name = None
     user_folders = pydas.communicator.list_user_folders(pydas.token)
     for cur_folder in user_folders:
         if cur_folder['name'] == destination:
             parent_folder_id = cur_folder['folder_id']
-            parent_folder_name = cur_folder['name']
     if parent_folder_id is None:
         print 'Unable to locate specified destination. ',
         print 'Defaulting to %s' % user_folders[0]['name']
         parent_folder_id = user_folders[0]['folder_id']
-        parent_folder_name = user_folders[0]['name']
 
     for current_file in glob.iglob(file_pattern):
+        current_file = os.path.normpath(current_file)
         if os.path.isfile(current_file):
             print 'Uploading Item from %s' % current_file
             _upload_as_item(os.path.basename(current_file),
@@ -219,14 +194,13 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
         else:
             _upload_folder_recursive(current_file,
                                      parent_folder_id,
-                                     parent_folder_name,
                                      leaf_folders_as_items)
 
 
 
 def _descend_folder_for_id(parsed_path, folder_id):
     """Descend a parsed path to return a folder id starting from folder_id
-    
+
     :param parsed_path: a list of folders from top to bottom of a hierarchy
     :param folder_id: The id of the folder from which to start the decent
     :returns: The id of the found folder or -1
@@ -263,7 +237,7 @@ def _search_folder_for_item_or_folder(name, folder_id):
     :param name: The name of the resource
     :param folder_id: The folder to search within
     :returns: A tuple indicating whether the resource is an item an the id of
-    said resoure. i.e. (True, item_id) or (False, folder_id). Note that in the
+    said resource. i.e. (True, item_id) or (False, folder_id). Note that in the
     event that we do not find a result return (False, -1)
     """
     if pydas.api_key:
@@ -278,13 +252,13 @@ def _search_folder_for_item_or_folder(name, folder_id):
         if item['name'] == name:
             return True, item['item_id'] # Found an item
     return False, -1 # Found nothing
-                                                
+
 
 def _find_resource_id_from_path(path):
     """Get a folder id from a path on the server.
 
     Warning: This is NOT efficient at all.
-    
+
     The schema for this path is:
     path := "/users/<name>/" | "/communities/<name>" , {<subfolder>/}
     name := <firstname> , "_" , <lastname>
@@ -320,8 +294,8 @@ def _find_resource_id_from_path(path):
         return _search_folder_for_item_or_folder(end, leaf_folder_id)
     else:
         return False, -1
-        
-    
+
+
 def _download_folder_recursive(folder_id, path='.'):
     """Download a folder to the specified path along with any children.
 
@@ -379,4 +353,4 @@ def download(server_path, local_path = '.'):
             _download_item(resource_id, local_path)
         else:
             _download_folder_recursive(resource_id, local_path)
-    
+

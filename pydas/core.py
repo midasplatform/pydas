@@ -11,13 +11,13 @@ class Communicator(object):
 
     def __init__(self, url, drivers=None):
         """
-        Constructor that takes a midas url and an optional list of drivers
+        Constructor that takes a Midas url and an optional list of drivers
         to use
         """
         if drivers is None:
             self._drivers = []
             import inspect
-            baseDriverClass = pydas.drivers.BaseDriver 
+            baseDriverClass = pydas.drivers.BaseDriver
             for name, obj in inspect.getmembers(pydas.drivers):
                 if inspect.isclass(obj):
                     classHierarchy = inspect.getmro(obj)
@@ -75,7 +75,7 @@ class Communicator(object):
     def debug(self):
         """Return the debug state of all drivers by logically anding them.
         """
-        return reduce(lambda x, y: x.debug and y.debug, self.drivers)
+        return all(driver.debug for driver in self.drivers)
 
     @debug.setter
     def debug(self, value):
@@ -84,4 +84,3 @@ class Communicator(object):
         """
         for driver in self.drivers:
             driver.debug = value
-        
