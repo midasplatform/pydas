@@ -12,7 +12,10 @@ def reauth(fn):
         try:
             retVal = fn(*args, **kw)
             return retVal
-        except pydas.exceptions.PydasException:
+        except pydas.exceptions.PydasException as detail:
+            print "Caught PydasException: ", detail
+            print "Waiting 30 seconds, then retrying request"
+
             # wait 30 seconds before retrying
             time.sleep(30) 
 
