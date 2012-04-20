@@ -109,7 +109,7 @@ def _upload_folder_recursive(local_folder,
         new_folder_id = _create_folder(local_folder,
                                        parent_folder_id)
 
-        for entry in os.listdir(local_folder):
+        for entry in sorted(os.listdir(local_folder)):
             full_entry = os.path.join(local_folder, entry)
             if os.path.islink(full_entry):
                 # os.walk skips symlinks by default
@@ -144,7 +144,7 @@ def _upload_folder_as_item(local_folder, parent_folder_id):
                                               os.path.basename(local_folder),
                                               parent_folder_id)
     item_id = new_item['item_id']
-    subdircontents = os.listdir(local_folder)
+    subdircontents = sorted(os.listdir(local_folder))
     # for each file in the subdir, add it to the item
     filecount = len(subdircontents)
     for (ind, current_file) in enumerate(subdircontents):
