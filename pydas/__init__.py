@@ -8,6 +8,7 @@ import glob
 import os
 import os.path
 import pydas.core
+import hashlib
 
 pydas.communicator = None
 pydas.email = None
@@ -62,32 +63,106 @@ def add_item_upload_callback(callback):
     """
     pydas.item_upload_callbacks.append(callback)
 
-def _upload_as_item(local_file, parent_folder_id, file_path):
+
+def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
+    """Create an item from the local_file in the midas folder corresponding to 
+    the parent_folder_id.
+
+    :param local_file: full path to a file on the local file system
+    :param parent_folder_id: id of parent folder in Midas, where the item will be added
+    :param reuse_existing: boolean indicating whether to accept an existing item
+    of the same name in the same location, or create a new one instead
+    """ 
+    local_item_name = os.path.basename(local_file)
+    item_id = None 
+    if reuse_existing:
+        # check by name to see if the item already exists in the folder
+        children = pydas.communicator.folder_children(pydas.token, parent_folder_id)
+        items = children['items']
+     
+        for item in items:
+            if item['name'] == local_item_name:
+                item_id = item['item_id']
+                break
+     
+    if item_id is None:
+        # create the item for the subdir
+        new_item = pydas.communicator.create_item(pydas.token,
+                                                  local_item_name,
+                                                  parent_folder_id)
+        item_id = new_item['item_id']
+    
+    return item_id
+
+def _streaming_file_md5(file_path):
+    """create and return a hex checksum using md5 of the passed in file, will
+    stream the file, rather than load it all into memory.
+
+    :param file_path: full path to the file
+    """ 
+    md5 = hashlib.md5()
+    with open(file_path,'rb') as f: 
+        # iter needs an empty byte string for the returned iterator to halt at EOF
+        for chunk in iter(lambda: f.read(128 * md5.block_size), b''): 
+            md5.update(chunk)
+    return md5.hexdigest()
+
+
+
+def _create_bitstream(filepath, local_file, item_id, log_ind = None):
+    """Create a bitstream in the given midas item.
+    
+    :param filepath: full path to the local file
+    :param local_file: name of the local file
+    :param log_ind: any additional message to log upon creation of the bitstream
+    """
+    checksum = _streaming_file_md5(filepath)
+    upload_token = pydas.communicator.generate_upload_token(pydas.token,
+                                                            item_id,
+                                                            local_file,
+                                                            checksum)
+
+    if upload_token != "":
+        log_trace = "Uploading Bitstream from %s" % (filepath)
+        # only need to peform the upload if we haven't uploaded before
+        # in this cae, the upload token would not be empty 
+        pydas.communicator.perform_upload(upload_token,
+                                          local_file,
+                                          filepath = filepath,
+                                          itemid = item_id)
+    else:
+        log_trace = "Adding a bitstream link in this item to an existing bitstream from %s" % (filepath)
+        
+    if log_ind is not None:
+        log_trace = log_trace + log_ind
+    print log_trace
+
+
+
+def _upload_as_item(local_file, parent_folder_id, file_path, reuse_existing=False):
     """
     Function for doing an upload of a file as an item. This should be a
-    building block for user-level functions. It does not do anything to renew
-    tokens or anything fancy. local file is the name of the file and
-    file_path is full path to the file.
+    building block for user-level functions.
+
+    :param local_file: name of local file to upload
+    :param parent_folder_id: id of parent folder in Midas, where the item will be added
+    :param file_path: full path to the file
+
+    :param reuse_existing: boolean indicating whether to accept an existing item
+    of the same name in the same location, or create a new one instead
     """
-    new_item = pydas.communicator.create_item(pydas.token,
-                                              local_file,
-                                              parent_folder_id)
-    current_item_id = new_item['item_id']
-    up_token = pydas.communicator.generate_upload_token(pydas.token,
-                                                        current_item_id,
-                                                        local_file)
-    pydas.communicator.perform_upload(up_token,
-                                      local_file,
-                                      filepath = file_path,
-                                      itemid = current_item_id)
+    current_item_id = _create_or_reuse_item(local_file, parent_folder_id, reuse_existing)
+    _create_bitstream(file_path, local_file, current_item_id)
     for callback in pydas.item_upload_callbacks:
         callback(pydas.communicator, pydas.token, current_item_id)
 
 def _create_folder(local_folder, parent_folder_id):
     """
     Function for creating a remote folder and returning the id. This should
-    be a building block for user-level functions. It does not do anything to
-    renew tokens or anything fancy.
+    be a building block for user-level functions.
+
+    :param local_folder: full path to a local folder
+    :param parent_folder_id: id of parent folder in Midas, where the new folder will be added
     """
     new_folder = pydas.communicator.create_folder(pydas.token,
                                                   os.path.basename(local_folder),
@@ -96,18 +171,26 @@ def _create_folder(local_folder, parent_folder_id):
 
 def _upload_folder_recursive(local_folder,
                              parent_folder_id,
-                             leaf_folders_as_items=False):
+                             leaf_folders_as_items=False,
+                             reuse_existing=False):
     """
-    Function to recursively upload a folder an all of its descendants.
+    Function to recursively upload a folder and all of its descendants.
+
+    :param local_folder: full path to local folder to be uploaded
+    :param parent_folder_id: id of parent folder in Midas, where the new folder will be added
+    :param leaf_folders_as_items: whether leaf folders should have all files uploaded as single items
+    :param reuse_existing: boolean indicating whether to accept an existing item
+    of the same name in the same location, or create a new one instead
     """
     if leaf_folders_as_items and _has_only_files(local_folder):
         print 'Creating Item from %s' % local_folder
-        _upload_folder_as_item(local_folder, parent_folder_id)
+        _upload_folder_as_item(local_folder, parent_folder_id, reuse_existing)
         return
     else:
+        # do not need to check if folder exists, if it does, an attempt to 
+        # create it will just return the existing id
         print 'Creating Folder from %s' % local_folder
-        new_folder_id = _create_folder(local_folder,
-                                       parent_folder_id)
+        new_folder_id = _create_folder(local_folder, parent_folder_id)
 
         for entry in sorted(os.listdir(local_folder)):
             full_entry = os.path.join(local_folder, entry)
@@ -117,56 +200,58 @@ def _upload_folder_recursive(local_folder,
             elif os.path.isdir(full_entry):
                 _upload_folder_recursive(full_entry,
                                         new_folder_id,
-                                        leaf_folders_as_items)
+                                        leaf_folders_as_items,
+                                        reuse_existing)
             else:
                 print 'Uploading Item from %s' % full_entry
                 _upload_as_item(entry,
-                                parent_folder_id,
-                                full_entry)
+                                new_folder_id,
+                                full_entry,
+                                reuse_existing)
 
 def _has_only_files(local_folder):
     """Returns whether a folder has only files. This will be false if the
-    folder contains any subdirectories."""
+    folder contains any subdirectories.
+ 
+    :param local_folder: full path to the local folder
+    """
     return not any(os.path.isdir(os.path.join(local_folder, entry))
                     for entry in os.listdir(local_folder))
 
 
-
-def _upload_folder_as_item(local_folder, parent_folder_id):
+def _upload_folder_as_item(local_folder, parent_folder_id, reuse_existing=False):
     """Take a folder and use its base name as the name of a new item. Then,
     upload its containing files into the new item as bitstreams.
 
     :param local_folder: The path to the folder to be uploaded.
     :param parent_folder_id: The id of the destination folder for the new item.
+    :param reuse_existing: boolean indicating whether to accept an existing item
+    of the same name in the same location, or create a new one instead
     """
-    # create the item for the subdir
-    new_item = pydas.communicator.create_item(pydas.token,
-                                              os.path.basename(local_folder),
-                                              parent_folder_id)
-    item_id = new_item['item_id']
+    item_id = _create_or_reuse_item(local_folder, parent_folder_id, reuse_existing)
+
     subdircontents = sorted(os.listdir(local_folder))
     # for each file in the subdir, add it to the item
     filecount = len(subdircontents)
     for (ind, current_file) in enumerate(subdircontents):
         filepath = os.path.join(local_folder, current_file)
-        print "Uploading Bitstream from %s (%d of %d)" % (filepath,
-                                                          ind+1,
-                                                          filecount)
-        upload_token = pydas.communicator.generate_upload_token(pydas.token,
-                                                                item_id,
-                                                                current_file)
-        pydas.communicator.perform_upload(upload_token,
-                                          current_file,
-                                          filepath = filepath,
-                                          itemid = item_id)
+        log_ind = "(%d of %d)" % (ind+1, filecount)
+        _create_bitstream(filepath, current_file, item_id, log_ind)
+
     for callback in pydas.item_upload_callbacks:
         callback(pydas.communicator, pydas.token, item_id)
 
-def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
+def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False, reuse_existing=False):
     """
     Upload a pattern of files. This will recursively walk down every tree in
     the file pattern to create a hierarchy on the server. As of right now, this
     places the file into the currently logged in user's home directory.
+
+    :param file_pattern: a glob type pattern for files
+    :param destination: name of the midas destination folder, defaults to Private
+    :param leaf_folders_as_items: whether leaf folders should have all files uploaded as single items
+    :param reuse_existing: boolean indicating whether to accept an existing item
+    of the same name in the same location, or create a new one instead
     """
     if pydas.api_key:
         pydas.renew_token()
@@ -190,11 +275,13 @@ def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False):
             print 'Uploading Item from %s' % current_file
             _upload_as_item(os.path.basename(current_file),
                             parent_folder_id,
-                            current_file)
+                            current_file,
+                            reuse_existing)
         else:
             _upload_folder_recursive(current_file,
                                      parent_folder_id,
-                                     leaf_folders_as_items)
+                                     leaf_folders_as_items,
+                                     reuse_existing)
 
 
 

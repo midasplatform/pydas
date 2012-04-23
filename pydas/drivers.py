@@ -252,6 +252,32 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.delete', parameters)
         return response
 
+    def delete_folder(self, token, folder_id):
+        """Delete the folder with the passed in folder_id.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the folder to be deleted.
+        :returns: Dictionary of the response indicating success.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = folder_id
+        response = self.request('midas.folder.delete', parameters)
+        return response
+
+    def item_get(self, token, item_id):
+        """Get the attributes of the specified item.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the requested item.
+        :returns: Dictionary of the item attributes.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        response = self.request('midas.item.get', parameters)
+        return response
+
     def folder_children(self, token, folder_id):
         """Get the non-recursive children of the passed in folder_id.
         """
