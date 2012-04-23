@@ -15,7 +15,7 @@ pydas.email = None
 pydas.api_key = None
 pydas.token = None
 pydas.item_upload_callbacks = []
-pydas.version = '0.2.4'
+pydas.version = '0.2.5'
 
 def login(email=None, password=None, api_key=None, url=None):
     """
