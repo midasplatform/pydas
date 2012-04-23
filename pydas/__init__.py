@@ -305,15 +305,13 @@ def _descend_folder_for_id(parsed_path, folder_id):
         cur_folder_id = base_folder['folder_id']
         cur_children = pydas.communicator.folder_children(pydas.token,
                                                           cur_folder_id)
-        found = False
         for inner_folder in cur_children['folders']:
             if inner_folder['name'] == path_part:
                 base_folder = pydas.communicator.folder_get(pydas.token,
                                                             inner_folder['folder_id'])
                 cur_folder_id = base_folder['folder_id']
-                found = True
                 break
-        if not found:
+        else:
             return -1
     return cur_folder_id
 
