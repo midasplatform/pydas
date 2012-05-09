@@ -162,7 +162,6 @@ class CoreDriver(BaseDriver):
 
         :param email: The email of the user.
         :param password: The user's password.
-
         :returns: String api-key to confirm that it was fetched successfully.
         """
         parameters = dict()
@@ -172,9 +171,10 @@ class CoreDriver(BaseDriver):
         return response['apikey']
 
     def list_users(self, limit=20):
-        """List the public users in the system
-        :param limit: The number of users to fetch
-        :returns: The list of users
+        """List the public users in the system.
+
+        :param limit: The number of users to fetch.
+        :returns: The list of users.
         """
         parameters = dict()
         parameters['limit'] = limit
@@ -183,9 +183,10 @@ class CoreDriver(BaseDriver):
 
     def get_user_by_name(self, firstname, lastname):
         """Get a user by the first and last name of that user.
-        :param firstname: The first name of the user
-        :param lastname: The last name of the user
-        :returns: The user requested
+
+        :param firstname: The first name of the user.
+        :param lastname: The last name of the user.
+        :returns: The user requested.
         """
         parameters = dict()
         parameters['firstname'] = firstname
@@ -195,8 +196,9 @@ class CoreDriver(BaseDriver):
 
     def get_user_by_id(self, user_id):
         """Get a user by the first and last name of that user.
-        :param user_id: The id of the desired user
-        :returns: The user requested
+
+        :param user_id: The id of the desired user.
+        :returns: The user requested.
         """
         parameters = dict()
         parameters['user_id'] = user_id
@@ -205,8 +207,9 @@ class CoreDriver(BaseDriver):
 
     def get_community_by_name(self, name):
         """Get a community based on its name.
+
         :param name: The name of the target community.
-        :returns: The requested community
+        :returns: The requested community.
         """
         parameters = dict()
         parameters['name'] = name
@@ -215,8 +218,9 @@ class CoreDriver(BaseDriver):
 
     def get_community_by_id(self, community_id):
         """Get a community based on its id.
+
         :param community_id: The id of the target community.
-        :returns: The requested community
+        :returns: The requested community.
         """
         parameters = dict()
         parameters['id'] = community_id
@@ -261,6 +265,10 @@ class CoreDriver(BaseDriver):
 
     def folder_children(self, token, folder_id):
         """Get the non-recursive children of the passed in folder_id.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the requested folder.
+        :returns: Dictionary of two lists: 'folders' and 'items'.
         """
         parameters = dict()
         parameters['token'] = token
@@ -273,7 +281,7 @@ class CoreDriver(BaseDriver):
 
         :param token: A valid token for the user in question.
         :param folder_id: The id of the folder to be deleted.
-        :returns: Dictionary of the response indicating success.
+        :returns: None.
         """
         parameters = dict()
         parameters['token'] = token
@@ -318,11 +326,12 @@ class CoreDriver(BaseDriver):
         return response
 
     def download_item(self, item_id, token=None, revision=None):
-        """Download an item to disk
-        :param item_id: the id of the item to be downloaded
-        :param token: (optional) the authentication token of the user requesting the download
-        :param revision: (optional) the revision of the item to download, this defaults to HEAD
-        :returns: a tuple of the filename and the content iterator.
+        """Download an item to disk.
+
+        :param item_id: The id of the item to be downloaded.
+        :param token: (optional) The authentication token of the user requesting the download.
+        :param revision: (optional) The revision of the item to download, This defaults to HEAD.
+        :returns: A tuple of the filename and the content iterator.
         """
         parameters = dict()
         parameters['id'] = item_id
@@ -341,7 +350,7 @@ class CoreDriver(BaseDriver):
 
         :param token: A valid token for the user in question.
         :param item_id: The id of the item to be deleted.
-        :returns: Dictionary of the response indicating success.
+        :returns: None.
         """
         parameters = dict()
         parameters['token'] = token
@@ -350,8 +359,12 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_item_metadata(self, item, token=None, revision=None):
-        """
-        Get the metadata associated with an item.
+        """Get the metadata associated with an item.
+
+        :param item_id: The id of the item for which metadata will be returned
+        :param token: (optional) A valid token for the user in question.
+        :param revision: (optional) Revision of the item. Defaults to latest revision.
+        :returns: List of dictionaries containing item metadata.
         """
         parameters = dict()
         parameters['id'] = item
@@ -385,9 +398,16 @@ class CoreDriver(BaseDriver):
         return response['token']
 
     def perform_upload(self, uploadtoken, filename, **kwargs):
-        """
-        Upload a file into a given item (or just to the public folder if the
+        """Upload a file into a given item (or just to the public folder if the
         item is not specified.
+
+        :param uploadtoken: The upload token (returned by generate_upload_token)
+        :param filename: The upload filename.
+        :param mode: (optional) Stream or multipart. Default is stream.
+        :param folderid: (optional) The id of the folder to upload into.
+        :param itemid: (optional) If set, will create a new revision in the existing item.
+        :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
+        :returns: Dictionary containing the details of the item created or changed.
         """
         parameters = dict()
         parameters['uploadtoken'] = uploadtoken
@@ -414,8 +434,10 @@ class CoreDriver(BaseDriver):
 
     def search(self, search, token=None):
         """Get the resources corresponding to a given query.
-        :param search: The search criterion
-        :param token: (option) The credentials to use when searching
+
+        :param search: The search criterion.
+        :param token: (optional) The credentials to use when searching.
+        :returns: Dictionary containing the search result. Notable is the dictionary item 'results', which is a list of item details.
         """
         parameters = dict()
         parameters['search'] = search
