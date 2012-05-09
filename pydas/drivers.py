@@ -289,6 +289,21 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.delete', parameters)
         return response
 
+    def move_folder(self, token, item_id, dest_folder_id):
+        """Move a folder to the desination folder.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the folder to be moved.
+        :param dest_folder_id: The id of destination (new parent) folder.
+        :returns: Dictionary containing the details of the moved folder.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        parameters['dstfolderid'] = dest_folder_id
+        response = self.request('midas.folder.move', parameters)
+        return response
+
     def create_item(self, token, name, parentid, **kwargs):
         """Create an item to the server.
 
@@ -373,6 +388,58 @@ class CoreDriver(BaseDriver):
         if revision:
             parameters['revision'] = revision
         response = self.request('midas.item.getmetadata', parameters)
+        return response
+
+    def set_item_metadata(self, token, item_id, element, value, qualifier=None):
+        """Set the metadata associated with an item.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item for which metadata will be set.
+        :param element: The metadata element name.
+        :param value: The metadata value for the field.
+        :param qualifier: (optional) The metadata qualifier. Defaults to empty string.
+        :returns: None.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['itemId'] = item_id
+        parameters['element'] = element
+        parameters['value'] = value
+        if qualifier:
+            parameters['qualifier'] = qualifier
+        response = self.request('midas.item.setmetadata', parameters)
+        return response
+
+    def share_item(self, token, item_id, dest_folder_id):
+        """Share an item to the destination folder.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to be shared.
+        :param dest_folder_id: The id of destination folder where the item is shared to.
+        :returns: Dictionary containing the details of the shared item.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        parameters['dstfolderid'] = dest_folder_id
+        response = self.request('midas.item.share', parameters)
+        return response
+
+    def move_item(self, token, item_id, src_folder_id, dest_folder_id):
+        """Move an item from the source folder to the desination folder.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to be moved.
+        :param src_folder_id: The id of source folder where the item is located.
+        :param dest_folder_id: The id of destination folder where the item is moved to.
+        :returns: Dictionary containing the details of the moved item.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        parameters['srcfolderid'] = src_folder_id
+        parameters['dstfolderid'] = dest_folder_id
+        response = self.request('midas.item.move', parameters)
         return response
 
     def generate_upload_token(self, token, itemid, filename, checksum=None):
