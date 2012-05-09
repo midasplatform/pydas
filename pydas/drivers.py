@@ -146,20 +146,6 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.info')
         return response['version']
 
-    def get_default_api_key(self, email, password):
-        """Get the default api key for a user.
-
-        :param email: The email of the user.
-        :param password: The user's password.
-
-        :returns: String api-key to confirm that it was fetched successfully.
-        """
-        parameters = dict()
-        parameters['email'] = email
-        parameters['password'] = password
-        response = self.request('midas.user.apikey.default', parameters)
-        return response['apikey']
-
     def list_user_folders(self, token):
         """List the folders in the users home area.
 
@@ -169,6 +155,82 @@ class CoreDriver(BaseDriver):
         parameters = dict()
         parameters['token'] = token
         response = self.request('midas.user.folders', parameters)
+        return response
+
+    def get_default_api_key(self, email, password):
+        """Get the default api key for a user.
+
+        :param email: The email of the user.
+        :param password: The user's password.
+        :returns: String api-key to confirm that it was fetched successfully.
+        """
+        parameters = dict()
+        parameters['email'] = email
+        parameters['password'] = password
+        response = self.request('midas.user.apikey.default', parameters)
+        return response['apikey']
+
+    def list_users(self, limit=20):
+        """List the public users in the system.
+
+        :param limit: The number of users to fetch.
+        :returns: The list of users.
+        """
+        parameters = dict()
+        parameters['limit'] = limit
+        response = self.request('midas.user.list', parameters)
+        return response
+
+    def get_user_by_name(self, firstname, lastname):
+        """Get a user by the first and last name of that user.
+
+        :param firstname: The first name of the user.
+        :param lastname: The last name of the user.
+        :returns: The user requested.
+        """
+        parameters = dict()
+        parameters['firstname'] = firstname
+        parameters['lastname'] = lastname
+        response = self.request('midas.user.get', parameters)
+        return response
+
+    def get_user_by_id(self, user_id):
+        """Get a user by the first and last name of that user.
+
+        :param user_id: The id of the desired user.
+        :returns: The user requested.
+        """
+        parameters = dict()
+        parameters['user_id'] = user_id
+        response = self.request('midas.user.get', parameters)
+        return response
+
+    def get_community_by_name(self, name, token=None):
+        """Get a community based on its name.
+
+        :param name: The name of the target community.
+        :param token: (optional) A valid token for the user in question.
+        :returns: The requested community.
+        """
+        parameters = dict()
+        parameters['name'] = name
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.community.get', parameters)
+        return response
+
+    def get_community_by_id(self, community_id, token=None):
+        """Get a community based on its id.
+
+        :param community_id: The id of the target community.
+        :param token: (optional) A valid token for the user in question.
+        :returns: The requested community.
+        """
+        parameters = dict()
+        parameters['id'] = community_id
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.community.get', parameters)
         return response
 
     def create_folder(self, token, name, parent, **kwargs):
@@ -194,27 +256,59 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.create', parameters)
         return response
 
-    def generate_upload_token(self, token, itemid, filename, checksum=None):
-        """Generate a token to use for upload.
-
-        Midas uses a individual token for each upload. The token corresponds to
-        the file specified and that file only. Passing the MD5 checksum allows
-        the server to determine if the file is already in the assetstore.
+    def folder_get(self, token, folder_id):
+        """Get the attributes of the specified folder.
 
         :param token: A valid token for the user in question.
-        :param itemid: The id of the item in which to upload the file as a bitstream.
-        :param filename: The name of the file to generate the upload token for.
-        :param checksum: (optional) The checksum of the file to upload.
-        :returns: String of the upload token.
+        :param folder_id: The id of the requested folder.
+        :returns: Dictionary of the folder attributes.
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['itemid'] = itemid
-        parameters['filename'] = filename
-        if not checksum == None:
-            parameters['checksum'] = checksum
-        response = self.request('midas.upload.generatetoken', parameters)
-        return response['token']
+        parameters['id'] = folder_id
+        response = self.request('midas.folder.get', parameters)
+        return response
+
+    def folder_children(self, token, folder_id):
+        """Get the non-recursive children of the passed in folder_id.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the requested folder.
+        :returns: Dictionary of two lists: 'folders' and 'items'.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = folder_id
+        response = self.request('midas.folder.children', parameters)
+        return response
+
+    def delete_folder(self, token, folder_id):
+        """Delete the folder with the passed in folder_id.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the folder to be deleted.
+        :returns: None.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = folder_id
+        response = self.request('midas.folder.delete', parameters)
+        return response
+
+    def move_folder(self, token, item_id, dest_folder_id):
+        """Move a folder to the desination folder.
+
+        :param token: A valid token for the user in question.
+        :param folder_id: The id of the folder to be moved.
+        :param dest_folder_id: The id of destination (new parent) folder.
+        :returns: Dictionary containing the details of the moved folder.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        parameters['dstfolderid'] = dest_folder_id
+        response = self.request('midas.folder.move', parameters)
+        return response
 
     def create_item(self, token, name, parentid, **kwargs):
         """Create an item to the server.
@@ -239,32 +333,6 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.create', parameters)
         return response
 
-    def delete_item(self, token, item_id):
-        """Delete the item with the passed in item_id.
-
-        :param token: A valid token for the user in question.
-        :param item_id: The id of the item to be deleted.
-        :returns: Dictionary of the response indicating success.
-        """
-        parameters = dict()
-        parameters['token'] = token
-        parameters['id'] = item_id
-        response = self.request('midas.item.delete', parameters)
-        return response
-
-    def delete_folder(self, token, folder_id):
-        """Delete the folder with the passed in folder_id.
-
-        :param token: A valid token for the user in question.
-        :param folder_id: The id of the folder to be deleted.
-        :returns: Dictionary of the response indicating success.
-        """
-        parameters = dict()
-        parameters['token'] = token
-        parameters['id'] = folder_id
-        response = self.request('midas.folder.delete', parameters)
-        return response
-
     def item_get(self, token, item_id):
         """Get the attributes of the specified item.
 
@@ -278,32 +346,141 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.get', parameters)
         return response
 
-    def folder_children(self, token, folder_id):
-        """Get the non-recursive children of the passed in folder_id.
+    def download_item(self, item_id, token=None, revision=None):
+        """Download an item to disk.
+
+        :param item_id: The id of the item to be downloaded.
+        :param token: (optional) The authentication token of the user requesting the download.
+        :param revision: (optional) The revision of the item to download, This defaults to HEAD.
+        :returns: A tuple of the filename and the content iterator.
         """
         parameters = dict()
-        parameters['token'] = token
-        parameters['id'] = folder_id
-        response = self.request('midas.folder.children', parameters)
-        return response
+        parameters['id'] = item_id
+        if token:
+            parameters['token'] = token
+        if revision:
+            parameters['revision'] = revision
+        method_url = self.full_url + 'midas.item.download'
+        request = http.get(method_url,
+                           params=parameters)
+        filename = request.headers['content-disposition'][21:].strip('"')
+        return (filename, request.iter_content())
 
-    def folder_get(self, token, folder_id):
-        """Get the attributes of the specified folder.
+    def delete_item(self, token, item_id):
+        """Delete the item with the passed in item_id.
 
         :param token: A valid token for the user in question.
-        :param folder_id: The id of the requested folder.
-        :returns: Dictionary of the folder attributes.
+        :param item_id: The id of the item to be deleted.
+        :returns: None.
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['id'] = folder_id
-        response = self.request('midas.folder.get', parameters)
+        parameters['id'] = item_id
+        response = self.request('midas.item.delete', parameters)
         return response
 
-    def perform_upload(self, uploadtoken, filename, **kwargs):
+    def get_item_metadata(self, item, token=None, revision=None):
+        """Get the metadata associated with an item.
+
+        :param item_id: The id of the item for which metadata will be returned
+        :param token: (optional) A valid token for the user in question.
+        :param revision: (optional) Revision of the item. Defaults to latest revision.
+        :returns: List of dictionaries containing item metadata.
         """
-        Upload a file into a given item (or just to the public folder if the
+        parameters = dict()
+        parameters['id'] = item
+        if token:
+            parameters['token'] = token
+        if revision:
+            parameters['revision'] = revision
+        response = self.request('midas.item.getmetadata', parameters)
+        return response
+
+    def set_item_metadata(self, token, item_id, element, value, qualifier=None):
+        """Set the metadata associated with an item.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item for which metadata will be set.
+        :param element: The metadata element name.
+        :param value: The metadata value for the field.
+        :param qualifier: (optional) The metadata qualifier. Defaults to empty string.
+        :returns: None.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['itemId'] = item_id
+        parameters['element'] = element
+        parameters['value'] = value
+        if qualifier:
+            parameters['qualifier'] = qualifier
+        response = self.request('midas.item.setmetadata', parameters)
+        return response
+
+    def share_item(self, token, item_id, dest_folder_id):
+        """Share an item to the destination folder.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to be shared.
+        :param dest_folder_id: The id of destination folder where the item is shared to.
+        :returns: Dictionary containing the details of the shared item.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        parameters['dstfolderid'] = dest_folder_id
+        response = self.request('midas.item.share', parameters)
+        return response
+
+    def move_item(self, token, item_id, src_folder_id, dest_folder_id):
+        """Move an item from the source folder to the desination folder.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to be moved.
+        :param src_folder_id: The id of source folder where the item is located.
+        :param dest_folder_id: The id of destination folder where the item is moved to.
+        :returns: Dictionary containing the details of the moved item.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['id'] = item_id
+        parameters['srcfolderid'] = src_folder_id
+        parameters['dstfolderid'] = dest_folder_id
+        response = self.request('midas.item.move', parameters)
+        return response
+
+    def generate_upload_token(self, token, itemid, filename, checksum=None):
+        """Generate a token to use for upload.
+
+        Midas uses a individual token for each upload. The token corresponds to
+        the file specified and that file only. Passing the MD5 checksum allows
+        the server to determine if the file is already in the assetstore.
+
+        :param token: A valid token for the user in question.
+        :param itemid: The id of the item in which to upload the file as a bitstream.
+        :param filename: The name of the file to generate the upload token for.
+        :param checksum: (optional) The checksum of the file to upload.
+        :returns: String of the upload token.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['itemid'] = itemid
+        parameters['filename'] = filename
+        if not checksum == None:
+            parameters['checksum'] = checksum
+        response = self.request('midas.upload.generatetoken', parameters)
+        return response['token']
+
+    def perform_upload(self, uploadtoken, filename, **kwargs):
+        """Upload a file into a given item (or just to the public folder if the
         item is not specified.
+
+        :param uploadtoken: The upload token (returned by generate_upload_token)
+        :param filename: The upload filename.
+        :param mode: (optional) Stream or multipart. Default is stream.
+        :param folderid: (optional) The id of the folder to upload into.
+        :param itemid: (optional) If set, will create a new revision in the existing item.
+        :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
+        :returns: Dictionary containing the details of the item created or changed.
         """
         parameters = dict()
         parameters['uploadtoken'] = uploadtoken
@@ -328,98 +505,16 @@ class CoreDriver(BaseDriver):
                                 file_payload)
         return response
 
-    def get_item_metadata(self, item, token=None, revision=None):
-        """
-        Get the metadata associated with an item.
-        """
-        parameters = dict()
-        parameters['id'] = item
-        if token:
-            parameters['token'] = token
-        if revision:
-            parameters['revision'] = revision
-        response = self.request('midas.item.getmetadata', parameters)
-        return response
-
-    def download_item(self, item_id, token=None, revision=None):
-        """Download an item to disk
-        :param item_id: the id of the item to be downloaded
-        :param token: (optional) the authentication token of the user requesting the download
-        :param revision: (optional) the revision of the item to download, this defaults to HEAD
-        :returns: a tuple of the filename and the content iterator.
-        """
-        parameters = dict()
-        parameters['id'] = item_id
-        if token:
-            parameters['token'] = token
-        if revision:
-            parameters['revision'] = revision
-        method_url = self.full_url + 'midas.item.download'
-        request = http.get(method_url,
-                           params=parameters)
-        filename = request.headers['content-disposition'][21:].strip('"')
-        return (filename, request.iter_content())
-
-    def list_users(self, limit=20):
-        """List the public users in the system
-        :param limit: The number of users to fetch
-        :returns: The list of users
-        """
-        parameters = dict()
-        parameters['limit'] = limit
-        response = self.request('midas.user.list', parameters)
-        return response
-
-    def get_user_by_name(self, firstname, lastname):
-        """Get a user by the first and last name of that user.
-        :param firstname: The first name of the user
-        :param lastname: The last name of the user
-        :returns: The user requested
-        """
-        parameters = dict()
-        parameters['firstname'] = firstname
-        parameters['lastname'] = lastname
-        response = self.request('midas.user.get', parameters)
-        return response
-
-    def get_user_by_id(self, user_id):
-        """Get a user by the first and last name of that user.
-        :param user_id: The id of the desired user
-        :returns: The user requested
-        """
-        parameters = dict()
-        parameters['user_id'] = user_id
-        response = self.request('midas.user.get', parameters)
-        return response
-
-    def get_community_by_name(self, name):
-        """Get a community based on its name.
-        :param name: The name of the target community.
-        :returns: The requested community
-        """
-        parameters = dict()
-        parameters['name'] = name
-        response = self.request('midas.community.get', parameters)
-        return response
-
-    def get_community_by_id(self, community_id):
-        """Get a community based on its id.
-        :param community_id: The id of the target community.
-        :returns: The requested community
-        """
-        parameters = dict()
-        parameters['id'] = community_id
-        response = self.request('midas.community.get', parameters)
-        return response
-
     def search(self, search, token=None):
         """Get the resources corresponding to a given query.
-        :param search: The search criterion
-        :param token: (option) The credentials to use when searching
+
+        :param search: The search criterion.
+        :param token: (optional) The credentials to use when searching.
+        :returns: Dictionary containing the search result. Notable is the dictionary item 'results', which is a list of item details.
         """
         parameters = dict()
         parameters['search'] = search
-        if token != None:
+        if token:
             parameters['token'] = token
         response = self.request('midas.resource.search', parameters)
         return response
