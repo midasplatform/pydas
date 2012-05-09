@@ -205,25 +205,31 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.user.get', parameters)
         return response
 
-    def get_community_by_name(self, name):
+    def get_community_by_name(self, name, token=None):
         """Get a community based on its name.
 
         :param name: The name of the target community.
+        :param token: (optional) A valid token for the user in question.
         :returns: The requested community.
         """
         parameters = dict()
         parameters['name'] = name
+        if token:
+            parameters['token'] = token
         response = self.request('midas.community.get', parameters)
         return response
 
-    def get_community_by_id(self, community_id):
+    def get_community_by_id(self, community_id, token=None):
         """Get a community based on its id.
 
         :param community_id: The id of the target community.
+        :param token: (optional) A valid token for the user in question.
         :returns: The requested community.
         """
         parameters = dict()
         parameters['id'] = community_id
+        if token:
+            parameters['token'] = token
         response = self.request('midas.community.get', parameters)
         return response
 
@@ -508,7 +514,7 @@ class CoreDriver(BaseDriver):
         """
         parameters = dict()
         parameters['search'] = search
-        if token != None:
+        if token:
             parameters['token'] = token
         response = self.request('midas.resource.search', parameters)
         return response
