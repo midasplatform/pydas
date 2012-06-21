@@ -65,33 +65,33 @@ def add_item_upload_callback(callback):
 
 
 def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
-    """Create an item from the local_file in the midas folder corresponding to 
+    """Create an item from the local_file in the midas folder corresponding to
     the parent_folder_id.
 
     :param local_file: full path to a file on the local file system
     :param parent_folder_id: id of parent folder in Midas, where the item will be added
     :param reuse_existing: boolean indicating whether to accept an existing item
     of the same name in the same location, or create a new one instead
-    """ 
+    """
     local_item_name = os.path.basename(local_file)
-    item_id = None 
+    item_id = None
     if reuse_existing:
         # check by name to see if the item already exists in the folder
         children = pydas.communicator.folder_children(pydas.token, parent_folder_id)
         items = children['items']
-     
+
         for item in items:
             if item['name'] == local_item_name:
                 item_id = item['item_id']
                 break
-     
+
     if item_id is None:
         # create the item for the subdir
         new_item = pydas.communicator.create_item(pydas.token,
                                                   local_item_name,
                                                   parent_folder_id)
         item_id = new_item['item_id']
-    
+
     return item_id
 
 def _streaming_file_md5(file_path):
@@ -99,11 +99,11 @@ def _streaming_file_md5(file_path):
     stream the file, rather than load it all into memory.
 
     :param file_path: full path to the file
-    """ 
+    """
     md5 = hashlib.md5()
-    with open(file_path,'rb') as f: 
+    with open(file_path,'rb') as f:
         # iter needs an empty byte string for the returned iterator to halt at EOF
-        for chunk in iter(lambda: f.read(128 * md5.block_size), b''): 
+        for chunk in iter(lambda: f.read(128 * md5.block_size), b''):
             md5.update(chunk)
     return md5.hexdigest()
 
@@ -111,7 +111,7 @@ def _streaming_file_md5(file_path):
 
 def _create_bitstream(filepath, local_file, item_id, log_ind = None):
     """Create a bitstream in the given midas item.
-    
+
     :param filepath: full path to the local file
     :param local_file: name of the local file
     :param log_ind: any additional message to log upon creation of the bitstream
@@ -125,14 +125,14 @@ def _create_bitstream(filepath, local_file, item_id, log_ind = None):
     if upload_token != "":
         log_trace = "Uploading Bitstream from %s" % (filepath)
         # only need to peform the upload if we haven't uploaded before
-        # in this cae, the upload token would not be empty 
+        # in this cae, the upload token would not be empty
         pydas.communicator.perform_upload(upload_token,
                                           local_file,
-                                          filepath = filepath,
-                                          itemid = item_id)
+                                          filepath=filepath,
+                                          itemid=item_id)
     else:
         log_trace = "Adding a bitstream link in this item to an existing bitstream from %s" % (filepath)
-        
+
     if log_ind is not None:
         log_trace = log_trace + log_ind
     print log_trace
@@ -187,7 +187,7 @@ def _upload_folder_recursive(local_folder,
         _upload_folder_as_item(local_folder, parent_folder_id, reuse_existing)
         return
     else:
-        # do not need to check if folder exists, if it does, an attempt to 
+        # do not need to check if folder exists, if it does, an attempt to
         # create it will just return the existing id
         print 'Creating Folder from %s' % local_folder
         new_folder_id = _create_folder(local_folder, parent_folder_id)
@@ -212,7 +212,7 @@ def _upload_folder_recursive(local_folder,
 def _has_only_files(local_folder):
     """Returns whether a folder has only files. This will be false if the
     folder contains any subdirectories.
- 
+
     :param local_folder: full path to the local folder
     """
     return not any(os.path.isdir(os.path.join(local_folder, entry))

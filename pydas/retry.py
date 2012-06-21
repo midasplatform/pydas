@@ -17,7 +17,7 @@ def reauth(fn):
             print "Waiting 30 seconds, then retrying request"
 
             # wait 30 seconds before retrying
-            time.sleep(30) 
+            time.sleep(30)
 
             # renew the token
             # get the instance of the CoreDriver and set it as "that"
