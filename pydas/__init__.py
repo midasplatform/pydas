@@ -33,9 +33,9 @@ def login(email=None, password=None, api_key=None, application='Default', url=No
     pydas.communicator = pydas.core.Communicator(url)
 
     if email is None:
-        pydas.email = raw_input('Email: ')
-    else:
-        pydas.email = email
+        email = raw_input('Email: ')
+    pydas.email = email
+
     if api_key is None:
         if password is None:
             password = getpass.getpass('Password: ')
