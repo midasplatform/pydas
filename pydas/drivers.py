@@ -1,5 +1,4 @@
-"""
-This module is for the drivers that actually do the work of communication with
+"""This module is for the drivers that actually do the work of communication with
 the Midas server. Any drivers that are implemented should use the utility
 functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
@@ -13,8 +12,7 @@ from pydas.exceptions import PydasException
 import pydas.retry as retry
 
 class BaseDriver(object):
-    """
-    Base class for the Midas api drivers.
+    """Base class for the Midas api drivers.
     """
 
     # Class members.
@@ -22,8 +20,7 @@ class BaseDriver(object):
     apikey = ''
 
     def __init__(self, url=""):
-        """
-        Constructor
+        """Constructor
         """
         self._api_suffix = '/api/json?method='
         self._url = url
@@ -31,22 +28,19 @@ class BaseDriver(object):
 
     @property
     def url(self):
-        """
-        Getter for the url
+        """Getter for the url
         """
         return self._url
 
     @url.setter
     def url(self, value):
-        """
-        Set the url
+        """Set the url
         """
         self._url = value
 
     @property
     def full_url(self):
-        """
-        Return the full path the the url (including the api extensions).
+        """Return the full path the the url (including the api extensions).
         """
         return self._url + self._api_suffix
 
@@ -59,6 +53,7 @@ class BaseDriver(object):
     @debug.setter
     def debug(self, value):
         """Setter for debug state
+
         :param value: The value to set the debug state
         """
         self._debug = value
@@ -104,7 +99,7 @@ class BaseDriver(object):
         return response['data']
 
     def login_with_api_key(self, cur_email, cur_apikey, application='Default'):
-        """ Login and get a token.
+        """Login and get a token.
 
         If you do not specify a specific application, 'Default' will be used.
 
@@ -249,9 +244,9 @@ class CoreDriver(BaseDriver):
         parameters['name'] = name
         parameters['parentid'] = parent
         parameters['description'] = ''
-        optional_keys = ('description', 'uuid', 'privacy')
+        optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
-            if kwargs.has_key(key):
+            if key in kwargs:
                 parameters[key] = kwargs[key]
         response = self.request('midas.folder.create', parameters)
         return response
@@ -326,9 +321,9 @@ class CoreDriver(BaseDriver):
         parameters['name'] = name
         parameters['parentid'] = parentid
         parameters['privacy'] = 'Public'
-        optional_keys = ('description', 'uuid', 'privacy')
+        optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
-            if kwargs.has_key(key):
+            if key in kwargs:
                 parameters[key] = kwargs[key]
         response = self.request('midas.item.create', parameters)
         return response
@@ -448,7 +443,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.move', parameters)
         return response
 
-    def generate_upload_token(self, token, itemid, filename, checksum=None):
+    def generate_upload_token(self, token, item_id, filename, checksum=None):
         """Generate a token to use for upload.
 
         Midas uses a individual token for each upload. The token corresponds to
@@ -456,14 +451,14 @@ class CoreDriver(BaseDriver):
         the server to determine if the file is already in the assetstore.
 
         :param token: A valid token for the user in question.
-        :param itemid: The id of the item in which to upload the file as a bitstream.
+        :param item_id: The id of the item in which to upload the file as a bitstream.
         :param filename: The name of the file to generate the upload token for.
         :param checksum: (optional) The checksum of the file to upload.
         :returns: String of the upload token.
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['itemid'] = itemid
+        parameters['itemid'] = item_id
         parameters['filename'] = filename
         if not checksum == None:
             parameters['checksum'] = checksum
@@ -475,11 +470,12 @@ class CoreDriver(BaseDriver):
         item is not specified.
 
         :param uploadtoken: The upload token (returned by generate_upload_token)
-        :param filename: The upload filename.
+        :param filename: The upload filename. Also used as the path to the file, if 'filepath' is not set.
         :param mode: (optional) Stream or multipart. Default is stream.
         :param folderid: (optional) The id of the folder to upload into.
-        :param itemid: (optional) If set, will create a new revision in the existing item.
+        :param item_id: (optional) If set, will create a new revision in the existing item.
         :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
+        :param filepath: (optional) The path to the file.
         :returns: Dictionary containing the details of the item created or changed.
         """
         parameters = dict()
@@ -487,16 +483,16 @@ class CoreDriver(BaseDriver):
         parameters['filename'] = filename
         parameters['revision'] = 'head'
 
-        optional_keys = ('mode', 'folderid', 'itemid', 'revision')
+        optional_keys = ['mode', 'folderid', 'item_id', 'itemid', 'revision']
         for key in optional_keys:
-            if kwargs.has_key(key):
+            if key in kwargs:
+                if key == 'item_id':
+                    parameters['itemid'] = kwargs[key]
+                    continue
                 parameters[key] = kwargs[key]
 
         # We may want a different name than path
-        if kwargs.has_key('filepath'):
-            file_payload = open(kwargs['filepath'])
-        else:
-            file_payload = open(filename)
+        file_payload = open(kwargs.get('filepath', filename), 'rb')
         # Arcane getting of the file size using fstat. More details can be
         # found in the python library docs
         parameters['length'] = os.fstat(file_payload.fileno()).st_size
@@ -520,13 +516,11 @@ class CoreDriver(BaseDriver):
         return response
 
 class BatchmakeDriver(BaseDriver):
-    """
-    Driver for the Midas batchmake module's API methods.
+    """Driver for the Midas batchmake module's API methods.
     """
 
     def add_condor_dag(self, token, batchmaketaskid, dagfilename, dagmanoutfilename):
-        """
-        Adds a condor dag to the given batchmake task
+        """Adds a condor dag to the given batchmake task
         """
         parameters = dict()
         parameters['token'] = token
@@ -537,8 +531,7 @@ class BatchmakeDriver(BaseDriver):
         return response
 
     def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename, postfilename):
-        """
-        Adds a condor dag job to the condor dag associated with this batchmake task
+        """Adds a condor dag job to the condor dag associated with this batchmake task
         """
         parameters = dict()
         parameters['token'] = token
@@ -553,16 +546,14 @@ class BatchmakeDriver(BaseDriver):
 
 
 class DicomextractorDriver(BaseDriver):
-    """
-    Driver for the Midas dicomextractor module's API methods.
+    """Driver for the Midas dicomextractor module's API methods.
     """
 
-    def extract_dicommetadata(self, token, itemid):
-        """
-        Extracts DICOM metadata from the given item
+    def extract_dicommetadata(self, token, item_id):
+        """Extracts DICOM metadata from the given item
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['item'] = itemid
+        parameters['item'] = item_id
         response = self.request('midas.dicomextractor.extract', parameters)
         return response

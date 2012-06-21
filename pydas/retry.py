@@ -2,8 +2,7 @@ import pydas.exceptions
 import time
 
 def reauth(fn):
-    """
-    this decorator will detect a stale token and renew the token if possible,
+    """this decorator will detect a stale token and renew the token if possible,
     then retry the failed api call.
     """
     from functools import wraps
@@ -17,7 +16,7 @@ def reauth(fn):
             print "Waiting 30 seconds, then retrying request"
 
             # wait 30 seconds before retrying
-            time.sleep(30) 
+            time.sleep(30)
 
             # renew the token
             # get the instance of the CoreDriver and set it as "that"
