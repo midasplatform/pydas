@@ -15,7 +15,7 @@ pydas.api_key = None
 pydas.application = None
 pydas.token = None
 pydas.item_upload_callbacks = []
-pydas.version = '0.2.7'
+pydas.version = '0.2.8'
 
 def login(email=None, password=None, api_key=None, application='Default', url=None):
     """Do the legwork of logging into Midas, storing the api_key and token
