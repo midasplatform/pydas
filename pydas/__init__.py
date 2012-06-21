@@ -18,6 +18,12 @@ pydas.version = '0.2.7'
 
 def login(email=None, password=None, api_key=None, url=None):
     """Do the legwork of logging into Midas, storing the api_key and token
+
+    :param email: (optional) Email address to login with. If not set, the console will be prompted.
+    :param password: (optional) User password to login with. If not set and no 'api_key' is set, the console will be prompted.
+    :param api_key: (optional) API key to login with. If not set, password login with be used.
+    :param url: (optional) URL address of the Midas server to login to. If not set, the console will be prompted.
+    :returns: API token.
     """
     if url is None:
         url = raw_input('Server URL: ')
@@ -42,6 +48,8 @@ def login(email=None, password=None, api_key=None, url=None):
 
 def renew_token():
     """Renew or get a token to use for transactions with Midas.
+
+    :returns: API token.
     """
     pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key)
     return pydas.token
