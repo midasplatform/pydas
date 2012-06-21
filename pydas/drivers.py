@@ -489,9 +489,9 @@ class CoreDriver(BaseDriver):
 
         # We may want a different name than path
         if kwargs.has_key('filepath'):
-            file_payload = open(kwargs['filepath'])
+            file_payload = open(kwargs['filepath'], 'rb')
         else:
-            file_payload = open(filename)
+            file_payload = open(filename, 'rb')
         # Arcane getting of the file size using fstat. More details can be
         # found in the python library docs
         parameters['length'] = os.fstat(file_payload.fileno()).st_size
