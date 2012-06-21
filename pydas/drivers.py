@@ -443,7 +443,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.move', parameters)
         return response
 
-    def generate_upload_token(self, token, itemid, filename, checksum=None):
+    def generate_upload_token(self, token, item_id, filename, checksum=None):
         """Generate a token to use for upload.
 
         Midas uses a individual token for each upload. The token corresponds to
@@ -451,14 +451,14 @@ class CoreDriver(BaseDriver):
         the server to determine if the file is already in the assetstore.
 
         :param token: A valid token for the user in question.
-        :param itemid: The id of the item in which to upload the file as a bitstream.
+        :param item_id: The id of the item in which to upload the file as a bitstream.
         :param filename: The name of the file to generate the upload token for.
         :param checksum: (optional) The checksum of the file to upload.
         :returns: String of the upload token.
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['itemid'] = itemid
+        parameters['itemid'] = item_id
         parameters['filename'] = filename
         if not checksum == None:
             parameters['checksum'] = checksum
@@ -473,7 +473,7 @@ class CoreDriver(BaseDriver):
         :param filename: The upload filename. Also used as the path to the file, if 'filepath' is not set.
         :param mode: (optional) Stream or multipart. Default is stream.
         :param folderid: (optional) The id of the folder to upload into.
-        :param itemid: (optional) If set, will create a new revision in the existing item.
+        :param item_id: (optional) If set, will create a new revision in the existing item.
         :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
         :param filepath: (optional) The path to the file.
         :returns: Dictionary containing the details of the item created or changed.
@@ -483,9 +483,12 @@ class CoreDriver(BaseDriver):
         parameters['filename'] = filename
         parameters['revision'] = 'head'
 
-        optional_keys = ['mode', 'folderid', 'itemid', 'revision']
+        optional_keys = ['mode', 'folderid', 'item_id', 'itemid', 'revision']
         for key in optional_keys:
             if key in kwargs:
+                if key == 'item_id':
+                    parameters['itemid'] = kwargs[key]
+                    continue
                 parameters[key] = kwargs[key]
 
         # We may want a different name than path
@@ -546,11 +549,11 @@ class DicomextractorDriver(BaseDriver):
     """Driver for the Midas dicomextractor module's API methods.
     """
 
-    def extract_dicommetadata(self, token, itemid):
+    def extract_dicommetadata(self, token, item_id):
         """Extracts DICOM metadata from the given item
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['item'] = itemid
+        parameters['item'] = item_id
         response = self.request('midas.dicomextractor.extract', parameters)
         return response
