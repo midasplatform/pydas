@@ -1,5 +1,4 @@
-"""
-Python module for communicating with a Midas server
+"""Python module for communicating with a Midas server
 """
 __all__ = ['drivers', 'core', 'exceptions']
 
@@ -18,8 +17,7 @@ pydas.item_upload_callbacks = []
 pydas.version = '0.2.6'
 
 def login(email=None, password=None, api_key=None, url=None):
-    """
-    Do the legwork of logging into Midas, storing the api_key and token
+    """Do the legwork of logging into Midas, storing the api_key and token
     """
     if url is None:
         url = raw_input('Server URL: ')
@@ -43,8 +41,7 @@ def login(email=None, password=None, api_key=None, url=None):
     return renew_token()
 
 def renew_token():
-    """
-    Renew or get a token to use for transactions with Midas.
+    """Renew or get a token to use for transactions with Midas.
     """
     pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key)
     return pydas.token
@@ -140,8 +137,7 @@ def _create_bitstream(filepath, local_file, item_id, log_ind = None):
 
 
 def _upload_as_item(local_file, parent_folder_id, file_path, reuse_existing=False):
-    """
-    Function for doing an upload of a file as an item. This should be a
+    """Function for doing an upload of a file as an item. This should be a
     building block for user-level functions.
 
     :param local_file: name of local file to upload
@@ -157,8 +153,7 @@ def _upload_as_item(local_file, parent_folder_id, file_path, reuse_existing=Fals
         callback(pydas.communicator, pydas.token, current_item_id)
 
 def _create_folder(local_folder, parent_folder_id):
-    """
-    Function for creating a remote folder and returning the id. This should
+    """Function for creating a remote folder and returning the id. This should
     be a building block for user-level functions.
 
     :param local_folder: full path to a local folder
@@ -173,8 +168,7 @@ def _upload_folder_recursive(local_folder,
                              parent_folder_id,
                              leaf_folders_as_items=False,
                              reuse_existing=False):
-    """
-    Function to recursively upload a folder and all of its descendants.
+    """Function to recursively upload a folder and all of its descendants.
 
     :param local_folder: full path to local folder to be uploaded
     :param parent_folder_id: id of parent folder in Midas, where the new folder will be added
@@ -242,8 +236,7 @@ def _upload_folder_as_item(local_folder, parent_folder_id, reuse_existing=False)
         callback(pydas.communicator, pydas.token, item_id)
 
 def upload(file_pattern, destination = 'Private', leaf_folders_as_items=False, reuse_existing=False):
-    """
-    Upload a pattern of files. This will recursively walk down every tree in
+    """Upload a pattern of files. This will recursively walk down every tree in
     the file pattern to create a hierarchy on the server. As of right now, this
     places the file into the currently logged in user's home directory.
 

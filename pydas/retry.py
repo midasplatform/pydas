@@ -2,8 +2,7 @@ import pydas.exceptions
 import time
 
 def reauth(fn):
-    """
-    this decorator will detect a stale token and renew the token if possible,
+    """this decorator will detect a stale token and renew the token if possible,
     then retry the failed api call.
     """
     from functools import wraps

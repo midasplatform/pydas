@@ -1,5 +1,4 @@
-"""
-This module is for the drivers that actually do the work of communication with
+"""This module is for the drivers that actually do the work of communication with
 the Midas server. Any drivers that are implemented should use the utility
 functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
@@ -13,8 +12,7 @@ from pydas.exceptions import PydasException
 import pydas.retry as retry
 
 class BaseDriver(object):
-    """
-    Base class for the Midas api drivers.
+    """Base class for the Midas api drivers.
     """
 
     # Class members.
@@ -22,8 +20,7 @@ class BaseDriver(object):
     apikey = ''
 
     def __init__(self, url=""):
-        """
-        Constructor
+        """Constructor
         """
         self._api_suffix = '/api/json?method='
         self._url = url
@@ -31,22 +28,19 @@ class BaseDriver(object):
 
     @property
     def url(self):
-        """
-        Getter for the url
+        """Getter for the url
         """
         return self._url
 
     @url.setter
     def url(self, value):
-        """
-        Set the url
+        """Set the url
         """
         self._url = value
 
     @property
     def full_url(self):
-        """
-        Return the full path the the url (including the api extensions).
+        """Return the full path the the url (including the api extensions).
         """
         return self._url + self._api_suffix
 
@@ -59,6 +53,7 @@ class BaseDriver(object):
     @debug.setter
     def debug(self, value):
         """Setter for debug state
+
         :param value: The value to set the debug state
         """
         self._debug = value
@@ -104,7 +99,7 @@ class BaseDriver(object):
         return response['data']
 
     def login_with_api_key(self, cur_email, cur_apikey, application='Default'):
-        """ Login and get a token.
+        """Login and get a token.
 
         If you do not specify a specific application, 'Default' will be used.
 
@@ -520,13 +515,11 @@ class CoreDriver(BaseDriver):
         return response
 
 class BatchmakeDriver(BaseDriver):
-    """
-    Driver for the Midas batchmake module's API methods.
+    """Driver for the Midas batchmake module's API methods.
     """
 
     def add_condor_dag(self, token, batchmaketaskid, dagfilename, dagmanoutfilename):
-        """
-        Adds a condor dag to the given batchmake task
+        """Adds a condor dag to the given batchmake task
         """
         parameters = dict()
         parameters['token'] = token
@@ -537,8 +530,7 @@ class BatchmakeDriver(BaseDriver):
         return response
 
     def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename, postfilename):
-        """
-        Adds a condor dag job to the condor dag associated with this batchmake task
+        """Adds a condor dag job to the condor dag associated with this batchmake task
         """
         parameters = dict()
         parameters['token'] = token
@@ -553,13 +545,11 @@ class BatchmakeDriver(BaseDriver):
 
 
 class DicomextractorDriver(BaseDriver):
-    """
-    Driver for the Midas dicomextractor module's API methods.
+    """Driver for the Midas dicomextractor module's API methods.
     """
 
     def extract_dicommetadata(self, token, itemid):
-        """
-        Extracts DICOM metadata from the given item
+        """Extracts DICOM metadata from the given item
         """
         parameters = dict()
         parameters['token'] = token
