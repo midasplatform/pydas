@@ -244,9 +244,9 @@ class CoreDriver(BaseDriver):
         parameters['name'] = name
         parameters['parentid'] = parent
         parameters['description'] = ''
-        optional_keys = ('description', 'uuid', 'privacy')
+        optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
-            if kwargs.has_key(key):
+            if key in kwargs:
                 parameters[key] = kwargs[key]
         response = self.request('midas.folder.create', parameters)
         return response
@@ -321,9 +321,9 @@ class CoreDriver(BaseDriver):
         parameters['name'] = name
         parameters['parentid'] = parentid
         parameters['privacy'] = 'Public'
-        optional_keys = ('description', 'uuid', 'privacy')
+        optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
-            if kwargs.has_key(key):
+            if key in kwargs:
                 parameters[key] = kwargs[key]
         response = self.request('midas.item.create', parameters)
         return response
@@ -483,16 +483,13 @@ class CoreDriver(BaseDriver):
         parameters['filename'] = filename
         parameters['revision'] = 'head'
 
-        optional_keys = ('mode', 'folderid', 'itemid', 'revision')
+        optional_keys = ['mode', 'folderid', 'itemid', 'revision']
         for key in optional_keys:
-            if kwargs.has_key(key):
+            if key in kwargs:
                 parameters[key] = kwargs[key]
 
         # We may want a different name than path
-        if kwargs.has_key('filepath'):
-            file_payload = open(kwargs['filepath'], 'rb')
-        else:
-            file_payload = open(filename, 'rb')
+        file_payload = open(kwargs.get('filepath', filename), 'rb')
         # Arcane getting of the file size using fstat. More details can be
         # found in the python library docs
         parameters['length'] = os.fstat(file_payload.fileno()).st_size
