@@ -470,11 +470,12 @@ class CoreDriver(BaseDriver):
         item is not specified.
 
         :param uploadtoken: The upload token (returned by generate_upload_token)
-        :param filename: The upload filename.
+        :param filename: The upload filename. Also used as the path to the file, if 'filepath' is not set.
         :param mode: (optional) Stream or multipart. Default is stream.
         :param folderid: (optional) The id of the folder to upload into.
         :param itemid: (optional) If set, will create a new revision in the existing item.
         :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
+        :param filepath: (optional) The path to the file.
         :returns: Dictionary containing the details of the item created or changed.
         """
         parameters = dict()
