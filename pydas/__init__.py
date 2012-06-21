@@ -12,16 +12,18 @@ import hashlib
 pydas.communicator = None
 pydas.email = None
 pydas.api_key = None
+pydas.application = None
 pydas.token = None
 pydas.item_upload_callbacks = []
 pydas.version = '0.2.7'
 
-def login(email=None, password=None, api_key=None, url=None):
+def login(email=None, password=None, api_key=None, application='Default', url=None):
     """Do the legwork of logging into Midas, storing the api_key and token
 
     :param email: (optional) Email address to login with. If not set, the console will be prompted.
     :param password: (optional) User password to login with. If not set and no 'api_key' is set, the console will be prompted.
     :param api_key: (optional) API key to login with. If not set, password login with be used.
+    :param application: (optional) Application name to be used with 'api_key'.
     :param url: (optional) URL address of the Midas server to login to. If not set, the console will be prompted.
     :returns: API token.
     """
@@ -39,8 +41,10 @@ def login(email=None, password=None, api_key=None, url=None):
             password = getpass.getpass('Password: ')
         pydas.api_key = pydas.communicator.get_default_api_key(pydas.email,
                                                                password)
+        pydas.application = 'Default'
     else:
         pydas.api_key = api_key
+        pydas.application = application
 
     return renew_token()
 
@@ -49,7 +53,7 @@ def renew_token():
 
     :returns: API token.
     """
-    pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key)
+    pydas.token = pydas.communicator.login_with_api_key(pydas.email, pydas.api_key, application=pydas.application)
     return pydas.token
 
 
