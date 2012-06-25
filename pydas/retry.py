@@ -13,6 +13,10 @@ def reauth(fn):
             return retVal
         except pydas.exceptions.PydasException as detail:
             print "Caught PydasException: ", detail
+            # Unable to authenticate using the given credentials.
+            if args[1] == 'midas.login':
+                print "midas.login request failed, rethrow the exception"
+                raise
             print "Waiting 30 seconds, then retrying request"
 
             # wait 30 seconds before retrying
