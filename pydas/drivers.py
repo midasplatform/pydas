@@ -200,6 +200,17 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.user.get', parameters)
         return response
 
+    def get_user_by_email(self, email):
+        """Get a user by the email of that user.
+
+        :param email: The email of the desired user.
+        :returns: The user requested.
+        """
+        parameters = dict()
+        parameters['email'] = email
+        response = self.request('midas.user.get', parameters)
+        return response
+
     def get_community_by_name(self, name, token=None):
         """Get a community based on its name.
 
