@@ -56,10 +56,10 @@ def version(versioner):
     conf.close()
 
     init_lines = []
-    init = open('pydas/session.py', 'r')
+    init = open('pydas/__init__.py', 'r')
     for line in init:
 
-        match = re.match('version = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
+        match = re.match('__version__ = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
                 version = {}
                 version['major'] = match.group(1)
@@ -74,12 +74,12 @@ def version(versioner):
                     version['patch'] = '0'
                 new_version = version['major'] + "." + version['minor'] + "." + version['patch']
 
-                line = "version = \'%s\'\n" % new_version
+                line = "__version__ = \'%s\'\n" % new_version
 
         init_lines.append(line)
     init.close()
 
-    init = open('pydas/session.py', 'w')
+    init = open('pydas/__init__.py', 'w')
     init.write(''.join(init_lines))
     init.close()
 

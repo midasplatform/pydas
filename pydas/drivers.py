@@ -32,7 +32,6 @@ functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 import json
 import requests as http
 import os
-import StringIO as sio
 from pydas.exceptions import PydasException
 import pydas.retry as retry
 
