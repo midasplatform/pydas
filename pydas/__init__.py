@@ -24,4 +24,4 @@
 #
 ###############################################################################
 
-from .api import login, upload, download, add_item_upload_callback
+from pydas.api import login, upload, download, add_item_upload_callback

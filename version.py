@@ -83,6 +83,34 @@ def version(versioner):
     init.write(''.join(init_lines))
     init.close()
 
+    setup_lines = []
+    setup = open('setup.py', 'r')
+    for line in setup:
+
+        match = re.match('version = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
+        if match is not None:
+                version = {}
+                version['major'] = match.group(1)
+                version['minor'] = match.group(2)
+                version['patch'] = match.group(3)
+                old_version = version['major'] + "." + version['minor'] + "." + version['patch']
+                version[versioner] = str(int(version[versioner]) + 1)
+                if versioner == 'major':
+                    version['minor'] = '0'
+                    version['patch'] = '0'
+                if versioner == 'minor':
+                    version['patch'] = '0'
+                new_version = version['major'] + "." + version['minor'] + "." + version['patch']
+
+                line = "version = \'%s\'\n" % new_version
+
+        setup_lines.append(line)
+    setup.close()
+
+    setup = open('setup.py', 'w')
+    setup.write(''.join(setup_lines))
+    setup.close()
+
     print "updated version from %s to %s" % (old_version, new_version)
 
 

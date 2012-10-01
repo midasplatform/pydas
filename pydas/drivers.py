@@ -29,8 +29,7 @@ the Midas server. Any drivers that are implemented should use the utility
 functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
 
-import simplejson as json
-import simplejson.decoder
+import json
 import requests as http
 import os
 import StringIO as sio

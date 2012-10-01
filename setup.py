@@ -27,12 +27,7 @@
 import os
 import sys
 
-import pydas
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
@@ -40,10 +35,12 @@ if sys.argv[-1] == 'publish':
 
 packages = ['pydas']
 
-requires = []
+version = '0.2.23'
+
+requires = ['requests']
 
 setup(name='pydas',
-    version=pydas.version,
+    version=version,
     description='Upload data to a Midas-based application with Python.',
     long_description=open('README.rst').read(),
     author='Patrick Reynolds',
