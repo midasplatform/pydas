@@ -1,7 +1,34 @@
+#!/usr/bin/evn python
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#
+# Library:   pydas
+#
+# Copyright 2010 Kitware Inc. 28 Corporate Drive,
+# Clifton Park, NY, 12065, USA.
+#
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 ( the "License" );
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+###############################################################################
+
 """Module for the main user classes for pydas.
 """
 import pydas.drivers
 import pydas.exceptions
+
 
 class Communicator(object):
     """Class for communicating with the Midas server through its drivers.
@@ -51,14 +78,14 @@ class Communicator(object):
             return self._url
 
     @url.setter
-    def url(self, value):
+    def url_set(self, value):
         """Setter for the url.
         """
         for driver in self.drivers:
             driver.url = value
 
     @url.deleter
-    def url(self):
+    def url_del(self):
         """Delete the url.
         """
         del self._url
@@ -70,7 +97,7 @@ class Communicator(object):
         return all(driver.debug for driver in self.drivers)
 
     @debug.setter
-    def debug(self, value):
+    def debug_set(self, value):
         """Set the debug state on all of the drivers attached to the
         communicator.
         """

@@ -1,7 +1,7 @@
 #!/usr/bin/evn python
 # -*- coding: utf-8 -*-
 
-################################################################################
+###############################################################################
 #
 # Library:   pydas
 #
@@ -22,25 +22,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-################################################################################
+###############################################################################
 
-"""Modules for defining exceptions in pydas
-"""
-
-
-class PydasException(Exception):
-    """Base class for exception to throw within pydas
-    """
-
-    def __init__(self, value):
-        """Override the constructor to support a basic message
-        """
-        super(PydasException, self).__init__()
-        self.value = value
-        self.method = None
-        self.code = None
-
-    def __str__(self):
-        """Override the string method
-        """
-        return repr(self.value)
+communicator = None
+email = None
+api_key = None
+application = None
+token = None
+item_upload_callbacks = []
+version = '0.2.8'

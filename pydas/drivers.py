@@ -1,3 +1,29 @@
+#!/usr/bin/evn python
+# -*- coding: utf-8 -*-
+
+################################################################################
+#
+# Library:   pydas
+#
+# Copyright 2010 Kitware Inc. 28 Corporate Drive,
+# Clifton Park, NY, 12065, USA.
+#
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 ( the "License" );
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
+
 """This module is for the drivers that actually do the work of communication with
 the Midas server. Any drivers that are implemented should use the utility
 functions provided in pydas.drivers.BaseDriver by inheriting from that class.
@@ -10,6 +36,7 @@ import os
 import StringIO as sio
 from pydas.exceptions import PydasException
 import pydas.retry as retry
+
 
 class BaseDriver(object):
     """Base class for the Midas api drivers.
@@ -33,7 +60,7 @@ class BaseDriver(object):
         return self._url
 
     @url.setter
-    def url(self, value):
+    def url_set(self, value):
         """Set the url
         """
         self._url = value
@@ -51,7 +78,7 @@ class BaseDriver(object):
         return self._debug
 
     @debug.setter
-    def debug(self, value):
+    def debug_set(self, value):
         """Setter for debug state
 
         :param value: The value to set the debug state
@@ -75,11 +102,13 @@ class BaseDriver(object):
             request = http.put(method_url,
                                data=file_payload.read(),
                                params=parameters,
-                               allow_redirects=True)
+                               allow_redirects=True,
+                               verify=False)
         else:
             request = http.post(method_url,
                                 params=parameters,
-                                allow_redirects=True)
+                                allow_redirects=True,
+                                verify=False)
         code = request.status_code
         if self._debug:
             print request.content
@@ -88,14 +117,17 @@ class BaseDriver(object):
                                  "%d" % code)
         try:
             response = json.loads(request.content)
-        except simplejson.decoder.JSONDecodeError:
+        except json.JSONDecodeError:
             raise PydasException("Request failed with HTTP error code "
                                  "%d and request.content %s" % (code, request.content))
 
         if response['stat'] != 'ok':
-            raise PydasException("Request failed with Midas error code "
+            exception = PydasException("Request failed with Midas error code "
                                  "%s: %s" % (response['code'],
                                              response['message']))
+            exception.code = response['code']
+            exception.method = method
+            raise exception
         return response['data']
 
     def login_with_api_key(self, cur_email, cur_apikey, application='Default'):
@@ -113,7 +145,11 @@ class BaseDriver(object):
         parameters['apikey'] = BaseDriver.apikey = cur_apikey  # Cache api key
         parameters['appname'] = application
         response = self.request('midas.login', parameters)
-        return response['token']
+        if 'token' in response:  # normal case
+            return response['token']
+        if 'mfa_token_id':       # case with multi-factor authentication
+            return response['mfa_token_id']
+
 
 class CoreDriver(BaseDriver):
     """Driver for the core API methods of Midas.
@@ -368,7 +404,8 @@ class CoreDriver(BaseDriver):
             parameters['revision'] = revision
         method_url = self.full_url + 'midas.item.download'
         request = http.get(method_url,
-                           params=parameters)
+                           params=parameters,
+                           verify=False)
         filename = request.headers['content-disposition'][21:].strip('"')
         return (filename, request.iter_content())
 
@@ -526,6 +563,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.resource.search', parameters)
         return response
 
+
 class BatchmakeDriver(BaseDriver):
     """Driver for the Midas batchmake module's API methods.
     """
@@ -568,3 +606,21 @@ class DicomextractorDriver(BaseDriver):
         parameters['item'] = item_id
         response = self.request('midas.dicomextractor.extract', parameters)
         return response
+
+
+class MultiFactorAuthenticationDriver(BaseDriver):
+    """Driver for the multi-factor authentication module's API methods.
+    """
+
+    def mfa_otp_login(self, temp_token, one_time_pass):
+        """ Log in to get the real token using the temporary token and otp.
+
+        :param temp_token: The temporary token (or id) returned from normal login
+        :param one_time_pass: The one-time pass to be sent to the underlying multi-factor engine.
+        :returns: A standard token for interacting with the web api.
+        """
+        parameters = dict()
+        parameters['mfaTokenId'] = temp_token
+        parameters['otp'] = one_time_pass
+        response = self.request('midas.mfa.otp.login', parameters)
+        return response['token']

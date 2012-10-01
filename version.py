@@ -15,14 +15,15 @@ class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
 
+
 def version(versioner):
 
     conf_lines = []
-    conf = open('docs/source/conf.py','r')
+    conf = open('docs/source/conf.py', 'r')
     for line in conf:
 
         if versioner != 'patch':
-            match = re.match('version = \'([0-9]*).([0-9]*)\'',line)
+            match = re.match('version = \'([0-9]*).([0-9]*)\'', line)
             if match is not None:
                 vers = {}
                 vers['major'] = match.group(1)
@@ -30,9 +31,9 @@ def version(versioner):
                 vers[versioner] = str(int(vers[versioner]) + 1)
                 if versioner == 'major':
                     vers['minor'] = '0'
-                line = "version = '"+vers['major']+"."+vers['minor']+"'\n"
+                line = "version = '" + vers['major'] + "." + vers['minor'] + "'\n"
 
-        match = re.match('release = \'([0-9]*).([0-9]*).([0-9]*)\'',line)
+        match = re.match('release = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
                 rel = {}
                 rel['major'] = match.group(1)
@@ -45,46 +46,44 @@ def version(versioner):
                 if versioner == 'minor':
                     rel['patch'] = '0'
 
-                line = "release = '"+rel['major']+"."+rel['minor']+"."+rel['patch']+"'\n"
+                line = "release = '" + rel['major'] + "." + rel['minor'] + "." + rel['patch'] + "'\n"
 
         conf_lines.append(line)
     conf.close()
 
-    conf = open('docs/source/conf.py','w')
+    conf = open('docs/source/conf.py', 'w')
     conf.write(''.join(conf_lines))
     conf.close()
 
-
     init_lines = []
-    init = open('pydas/__init__.py','r')
+    init = open('pydas/__init__.py', 'r')
     for line in init:
 
-        match = re.match('pydas.version = \'([0-9]*).([0-9]*).([0-9]*)\'',line)
+        match = re.match('pydas.version = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
                 version = {}
                 version['major'] = match.group(1)
                 version['minor'] = match.group(2)
                 version['patch'] = match.group(3)
-                old_version = version['major']+"."+version['minor']+"."+version['patch']
+                old_version = version['major'] + "." + version['minor'] + "." + version['patch']
                 version[versioner] = str(int(version[versioner]) + 1)
                 if versioner == 'major':
                     version['minor'] = '0'
                     version['patch'] = '0'
                 if versioner == 'minor':
                     version['patch'] = '0'
-                new_version = version['major']+"."+version['minor']+"."+version['patch']
+                new_version = version['major'] + "." + version['minor'] + "." + version['patch']
 
-                line = "pydas.version = '"+version['major']+"."+version['minor']+"."+version['patch']+"'\n"
+                line = "pydas.version = \'%s\'\n" % new_version
 
         init_lines.append(line)
     init.close()
 
-    init = open('pydas/__init__.py','w')
+    init = open('pydas/__init__.py', 'w')
     init.write(''.join(init_lines))
     init.close()
 
-    print "updated version from "+old_version+" to "+new_version
-
+    print "updated version from %s to %s" % (old_version, new_version)
 
 
 def main(argv=None):
@@ -94,7 +93,7 @@ def main(argv=None):
         try:
             opts, args = getopt.getopt(argv[1:], "h", ["help"])
         except getopt.error, msg:
-             raise Usage(msg)
+            raise Usage(msg)
         version_types = ['major', 'minor', 'patch']
         if(len(args) == 0):
             versioner = 'patch'
@@ -103,7 +102,6 @@ def main(argv=None):
                 raise Usage('argument must be [major|minor|patch]')
             versioner = args[0]
         version(versioner)
-
 
     except Usage, err:
         print >>sys.stderr, err.msg
