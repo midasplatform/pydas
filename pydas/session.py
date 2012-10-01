@@ -30,4 +30,4 @@ api_key = None
 application = None
 token = None
 item_upload_callbacks = []
-version = '0.2.8'
+version = '0.2.9'
