@@ -81,7 +81,7 @@ def renew_token():
     session.token = session.communicator.login_with_api_key(session.email,
         session.api_key, application=session.application)
     if len(session.token) < 10:  # HACK to check for mfa being enabled
-        one_time_pass = raw_input('One-Time Password: ')
+        one_time_pass = getpass.getpass('One-Time Password: ')
         session.token = session.communicator.mfa_otp_login(session.token,
                                                        one_time_pass)
     return session.token

@@ -27,6 +27,7 @@
 import pydas.exceptions
 import pydas.session as session
 import time
+import getpass
 
 
 def reauth(fn):
@@ -59,9 +60,9 @@ def reauth(fn):
             that = args[0]
             session.token = that.login_with_api_key(that.__class__.email,
                 that.__class__.apikey)
-            if session.communicator is not None:
+            if session.communicator is not None:  # We're using the high-level api
                 if len(session.token) < 10:  # HACK to check for mfa being enabled
-                    one_time_pass = raw_input('One-Time Password: ')
+                    one_time_pass = getpass.getpass('One-Time Password: ')
                     session.token = session.communicator.mfa_otp_login(session.token,
                         one_time_pass)
             print session.token

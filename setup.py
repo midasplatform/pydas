@@ -27,7 +27,7 @@
 import os
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
@@ -35,7 +35,7 @@ if sys.argv[-1] == 'publish':
 
 packages = ['pydas']
 
-version = '0.2.24'
+version = '0.2.25'
 
 requires = ['requests']
 
