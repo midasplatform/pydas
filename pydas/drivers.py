@@ -365,7 +365,6 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['name'] = name
         parameters['parentid'] = parentid
-        parameters['privacy'] = 'Public'
         optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
             if key in kwargs:
