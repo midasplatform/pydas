@@ -146,6 +146,38 @@ def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
 
     return item_id
 
+def _create_or_reuse_folder(local_folder, parent_folder_id,
+                            reuse_existing=False):
+    """Create a folder from the local_file in the midas folder corresponding to
+    the parent_folder_id.
+
+    :param local_folder: full path to a directory on the local file system
+    :param parent_folder_id: id of parent folder in Midas, where the folder
+    will be added
+    :param reuse_existing: boolean indicating whether to accept an existing
+    folder of the same name in the same location, or create a new one instead
+    """
+    local_folder_name = os.path.basename(local_folder)
+    folder_id = None
+    if reuse_existing:
+        # check by name to see if the folder already exists in the folder
+        children = session.communicator.folder_children(session.token,
+            parent_folder_id)
+        folders = children['folders']
+
+        for folder in folders:
+            if folder['name'] == local_folder_name:
+                folder_id = folder['folder_id']
+                break
+
+    if folder_id is None:
+        # create the item for the subdir
+        new_folder = session.communicator.create_folder(session.token,
+                                                        local_folder_name,
+                                                        parent_folder_id)
+        folder_id = new_folder['folder_id']
+
+    return folder_id
 
 def _streaming_file_md5(file_path):
     """create and return a hex checksum using md5 of the passed in file, will
@@ -249,7 +281,8 @@ def _upload_folder_recursive(local_folder,
         # do not need to check if folder exists, if it does, an attempt to
         # create it will just return the existing id
         print 'Creating Folder from %s' % local_folder
-        new_folder_id = _create_folder(local_folder, parent_folder_id)
+        new_folder_id = _create_or_reuse_folder(local_folder, parent_folder_id,
+                                                reuse_existing)
 
         for entry in sorted(os.listdir(local_folder)):
             full_entry = os.path.join(local_folder, entry)
