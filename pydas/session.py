@@ -30,3 +30,4 @@ api_key = None
 application = None
 token = None
 item_upload_callbacks = []
+basic_auth = None

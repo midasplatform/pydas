@@ -103,3 +103,7 @@ class Communicator(object):
         """
         for driver in self.drivers:
             driver.debug = value
+
+    def set_auth(self, value):
+        for driver in self.drivers:
+            driver.auth = value

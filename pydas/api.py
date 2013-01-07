@@ -54,7 +54,10 @@ def login(email=None, password=None, api_key=None, application='Default',
     if url is None:
         url = raw_input('Server URL: ')
     url = url.rstrip('/')
-    session.communicator = Communicator(url)
+    if session.communicator is None:
+        session.communicator = Communicator(url)
+    else:
+        session.communicator.url = url
 
     if email is None:
         email = raw_input('Email: ')

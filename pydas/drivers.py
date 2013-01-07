@@ -50,6 +50,7 @@ class BaseDriver(object):
         self._api_suffix = '/api/json?method='
         self._url = url
         self._debug = False
+        self.auth = None
 
     @property
     def url(self):
@@ -101,12 +102,14 @@ class BaseDriver(object):
                                data=file_payload.read(),
                                params=parameters,
                                allow_redirects=True,
-                               verify=False)
+                               verify=False,
+                               auth=self.auth)
         else:
             request = http.post(method_url,
                                 params=parameters,
                                 allow_redirects=True,
-                                verify=False)
+                                verify=False,
+                                auth=self.auth)
         code = request.status_code
         if self._debug:
             print request.content
