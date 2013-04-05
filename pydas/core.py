@@ -78,17 +78,11 @@ class Communicator(object):
             return self._url
 
     @url.setter
-    def url_set(self, value):
+    def url(self, value):
         """Setter for the url.
         """
         for driver in self.drivers:
             driver.url = value
-
-    @url.deleter
-    def url_del(self):
-        """Delete the url.
-        """
-        del self._url
 
     @property
     def debug(self):

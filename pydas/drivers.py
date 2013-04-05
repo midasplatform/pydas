@@ -59,7 +59,7 @@ class BaseDriver(object):
         return self._url
 
     @url.setter
-    def url_set(self, value):
+    def url(self, value):
         """Set the url
         """
         self._url = value
@@ -118,7 +118,7 @@ class BaseDriver(object):
                                  "%d" % code)
         try:
             response = json.loads(request.content)
-        except json.JSONDecodeError:
+        except ValueError:
             raise PydasException("Request failed with HTTP error code "
                                  "%d and request.content %s" % (code, request.content))
 
