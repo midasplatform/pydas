@@ -81,12 +81,12 @@ def renew_token():
 
     :returns: API token.
     """
-    session.token = session.communicator.login_with_api_key(session.email,
-        session.api_key, application=session.application)
+    session.token = session.communicator.login_with_api_key(
+        session.email, session.api_key, application=session.application)
     if len(session.token) < 10:  # HACK to check for mfa being enabled
         one_time_pass = getpass.getpass('One-Time Password: ')
-        session.token = session.communicator.mfa_otp_login(session.token,
-                                                       one_time_pass)
+        session.token = session.communicator.mfa_otp_login(
+            session.token, one_time_pass)
     return session.token
 
 
@@ -131,8 +131,8 @@ def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
     item_id = None
     if reuse_existing:
         # check by name to see if the item already exists in the folder
-        children = session.communicator.folder_children(session.token,
-            parent_folder_id)
+        children = session.communicator.folder_children(
+            session.token, parent_folder_id)
         items = children['items']
 
         for item in items:
@@ -142,12 +142,12 @@ def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
 
     if item_id is None:
         # create the item for the subdir
-        new_item = session.communicator.create_item(session.token,
-                                                  local_item_name,
-                                                  parent_folder_id)
+        new_item = session.communicator.create_item(
+            session.token, local_item_name, parent_folder_id)
         item_id = new_item['item_id']
 
     return item_id
+
 
 def _create_or_reuse_folder(local_folder, parent_folder_id,
                             reuse_existing=False):
@@ -164,8 +164,8 @@ def _create_or_reuse_folder(local_folder, parent_folder_id,
     folder_id = None
     if reuse_existing:
         # check by name to see if the folder already exists in the folder
-        children = session.communicator.folder_children(session.token,
-            parent_folder_id)
+        children = session.communicator.folder_children(
+            session.token, parent_folder_id)
         folders = children['folders']
 
         for folder in folders:
@@ -181,6 +181,7 @@ def _create_or_reuse_folder(local_folder, parent_folder_id,
         folder_id = new_folder['folder_id']
 
     return folder_id
+
 
 def _streaming_file_md5(file_path):
     """create and return a hex checksum using md5 of the passed in file, will
@@ -206,19 +207,15 @@ def _create_bitstream(filepath, local_file, item_id, log_ind=None):
     bitstream
     """
     checksum = _streaming_file_md5(filepath)
-    upload_token = session.communicator.generate_upload_token(session.token,
-                                                            item_id,
-                                                            local_file,
-                                                            checksum)
+    upload_token = session.communicator.generate_upload_token(
+        session.token, item_id, local_file, checksum)
 
     if upload_token != "":
         log_trace = "Uploading Bitstream from %s" % (filepath)
         # only need to peform the upload if we haven't uploaded before
         # in this cae, the upload token would not be empty
-        session.communicator.perform_upload(upload_token,
-                                          local_file,
-                                          filepath=filepath,
-                                          itemid=item_id)
+        session.communicator.perform_upload(
+            upload_token, local_file, filepath=filepath, itemid=item_id)
     else:
         log_trace = "Adding a bitstream link in this item to an existing"
         "bitstream from %s" % (filepath)
@@ -229,7 +226,7 @@ def _create_bitstream(filepath, local_file, item_id, log_ind=None):
 
 
 def _upload_as_item(local_file, parent_folder_id, file_path,
-    reuse_existing=False):
+                    reuse_existing=False):
     """Function for doing an upload of a file as an item. This should be a
     building block for user-level functions.
 
@@ -242,7 +239,7 @@ def _upload_as_item(local_file, parent_folder_id, file_path,
     of the same name in the same location, or create a new one instead
     """
     current_item_id = _create_or_reuse_item(local_file, parent_folder_id,
-        reuse_existing)
+                                            reuse_existing)
     _create_bitstream(file_path, local_file, current_item_id)
     for callback in session.item_upload_callbacks:
         callback(session.communicator, session.token, current_item_id)
@@ -256,8 +253,8 @@ def _create_folder(local_folder, parent_folder_id):
     :param parent_folder_id: id of parent folder in Midas, where the new folder
     will be added
     """
-    new_folder = session.communicator.create_folder(session.token,
-        os.path.basename(local_folder), parent_folder_id)
+    new_folder = session.communicator.create_folder(
+        session.token, os.path.basename(local_folder), parent_folder_id)
     return new_folder['folder_id']
 
 
@@ -294,9 +291,9 @@ def _upload_folder_recursive(local_folder,
                 continue
             elif os.path.isdir(full_entry):
                 _upload_folder_recursive(full_entry,
-                                        new_folder_id,
-                                        leaf_folders_as_items,
-                                        reuse_existing)
+                                         new_folder_id,
+                                         leaf_folders_as_items,
+                                         reuse_existing)
             else:
                 print 'Uploading Item from %s' % full_entry
                 _upload_as_item(entry,
@@ -312,11 +309,11 @@ def _has_only_files(local_folder):
     :param local_folder: full path to the local folder
     """
     return not any(os.path.isdir(os.path.join(local_folder, entry))
-                    for entry in os.listdir(local_folder))
+                   for entry in os.listdir(local_folder))
 
 
 def _upload_folder_as_item(local_folder, parent_folder_id,
-    reuse_existing=False):
+                           reuse_existing=False):
     """Take a folder and use its base name as the name of a new item. Then,
     upload its containing files into the new item as bitstreams.
 
@@ -327,7 +324,7 @@ def _upload_folder_as_item(local_folder, parent_folder_id,
     of the same name in the same location, or create a new one instead
     """
     item_id = _create_or_reuse_item(local_folder, parent_folder_id,
-        reuse_existing)
+                                    reuse_existing)
 
     subdircontents = sorted(os.listdir(local_folder))
     # for each file in the subdir, add it to the item
@@ -342,7 +339,7 @@ def _upload_folder_as_item(local_folder, parent_folder_id,
 
 
 def upload(file_pattern, destination='Private', leaf_folders_as_items=False,
-    reuse_existing=False):
+           reuse_existing=False):
     """Upload a pattern of files. This will recursively walk down every tree in
     the file pattern to create a hierarchy on the server. As of right now, this
     places the file into the currently logged in user's home directory.
@@ -361,9 +358,12 @@ def upload(file_pattern, destination='Private', leaf_folders_as_items=False,
     # Logic for finding the proper folder to place the files in.
     parent_folder_id = None
     user_folders = session.communicator.list_user_folders(session.token)
-    for cur_folder in user_folders:
-        if cur_folder['name'] == destination:
-            parent_folder_id = cur_folder['folder_id']
+    if destination.startswith('/'):
+        parent_folder_id = _find_resource_id_from_path(destination)
+    else:
+        for cur_folder in user_folders:
+            if cur_folder['name'] == destination:
+                parent_folder_id = cur_folder['folder_id']
     if parent_folder_id is None:
         print 'Unable to locate specified destination. ',
         print 'Defaulting to %s' % user_folders[0]['name']
@@ -397,16 +397,16 @@ def _descend_folder_for_id(parsed_path, folder_id):
     session.token = verify_credentials()
 
     base_folder = session.communicator.folder_get(session.token,
-                                                folder_id)
+                                                  folder_id)
     cur_folder_id = -1
     for path_part in parsed_path:
         cur_folder_id = base_folder['folder_id']
-        cur_children = session.communicator.folder_children(session.token,
-                                                          cur_folder_id)
+        cur_children = session.communicator.folder_children(
+            session.token, cur_folder_id)
         for inner_folder in cur_children['folders']:
             if inner_folder['name'] == path_part:
-                base_folder = session.communicator.folder_get(session.token,
-                    inner_folder['folder_id'])
+                base_folder = session.communicator.folder_get(
+                    session.token, inner_folder['folder_id'])
                 cur_folder_id = base_folder['folder_id']
                 break
         else:
@@ -464,6 +464,7 @@ def _find_resource_id_from_path(path):
         leaf_folder_id = _descend_folder_for_id(parsed_path, user['folder_id'])
         return _search_folder_for_item_or_folder(end, leaf_folder_id)
     elif path.startswith('/communities/'):
+        print(parsed_path)
         parsed_path.pop(0)  # remove '' before /
         parsed_path.pop(0)  # remove 'communities'
         community_name = parsed_path.pop(0)  # remove '<community>'
@@ -488,8 +489,8 @@ def _download_folder_recursive(folder_id, path='.'):
     folder_path = os.path.join(path, cur_folder['name'])
     print 'Creating Folder at %s' % folder_path
     os.mkdir(folder_path)
-    cur_children = session.communicator.folder_children(session.token,
-        folder_id)
+    cur_children = session.communicator.folder_children(
+        session.token, folder_id)
     for item in cur_children['items']:
         _download_item(item['item_id'], folder_path)
     for folder in cur_children['folders']:
@@ -504,8 +505,8 @@ def _download_item(item_id, path='.'):
     """
     session.token = verify_credentials()
 
-    filename, content_iter = session.communicator.download_item(item_id,
-                                                              session.token)
+    filename, content_iter = session.communicator.download_item(
+        item_id, session.token)
     item_path = os.path.join(path, filename)
     print 'Creating File at %s' % item_path
     outFile = open(item_path, 'wb')
