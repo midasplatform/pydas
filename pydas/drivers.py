@@ -407,7 +407,7 @@ class CoreDriver(BaseDriver):
                            params=parameters,
                            verify=False)
         filename = request.headers['content-disposition'][21:].strip('"')
-        return (filename, request.iter_content())
+        return (filename, request.iter_content(chunk_size=10 * 1024))
 
     def delete_item(self, token, item_id):
         """Delete the item with the passed in item_id.
