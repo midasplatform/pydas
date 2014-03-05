@@ -491,6 +491,20 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.move', parameters)
         return response
 
+    def search_item_by_name(self, name, token=None):
+        """Return all items.
+
+        :param name: The name of the item to search by.
+        :param token: (optional) A valid token for the user in question.
+        :returns: A list of all items with the given name.
+        """
+        parameters = dict()
+        parameters['name'] = name
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.item.searchbyname', parameters)
+        return response['items']
+
     def generate_upload_token(self, token, item_id, filename, checksum=None):
         """Generate a token to use for upload.
 
@@ -624,3 +638,132 @@ class MultiFactorAuthenticationDriver(BaseDriver):
         parameters['otp'] = one_time_pass
         response = self.request('midas.mfa.otp.login', parameters)
         return response['token']
+
+class TrackerDriver(BaseDriver):
+    """Driver for the Midas tracker module's api methods.
+    """
+
+    def associate_item_with_scalar_data(self, token, item_id, scalar_id,
+                                        label):
+        """Associate a result item with a particular scalar value.
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to associate with the scalar.
+        :param scalar_id: Scalar id with which to associate the item.
+        :param label: The label describing the nature of the association.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['scalarIds'] = scalar_id
+        parameters['itemId'] = item_id
+        parameters['label'] = label
+        self.request('midas.tracker.item.associate', parameters)
+
+    def add_scalar_data(self, token, community_id, producer_display_name,
+                        metric_name, producer_revision, submit_time, value,
+                        **kwargs):
+        """Create a new scalar data point.
+
+        :param token: A valid token for the user in question.
+        :param community_id: The id of the community that owns the producer.
+        :param producer_display_name: The display name of the producer.
+        :param metric_name: The metric name that identifies which trend this
+        point belongs to.
+        :param producer_revision: The repository revision of the producer that
+        produced this value.
+        :param submit_time: The submit timestamp. Must be parseable with PHP
+        strtotime().
+        :param value: The value of the scalar.
+        :param config_item_id: (optional) If this value pertains to a specific
+        configuration item, pass its id here.
+        :param test_dataset_id: (optional) If this value pertains to a
+        specific test dataset, pass its id here.
+        :param truth_dataset_id: (optional) If this value pertains to a
+        specific ground truth dataset, pass its id here.
+        :param silent: (optional) If set, do not perform threshold-based email
+        notifications for this scalar.
+        :param unofficial: (optional) If passed, creates an unofficial scalar
+        visible only to the user performing the submission.
+        :returns: The scalar object that was created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['communityId'] = community_id
+        parameters['producerDisplayName'] = producer_display_name
+        parameters['metricName'] = metric_name
+        parameters['producerRevision'] = producer_revision
+        parameters['submitTime'] = submit_time
+        parameters['value'] = value
+        optional_keys = ['config_item_id', 'test_dataset_id',
+                         'truth_dataset_id', 'silent', 'unofficial']
+        for key in optional_keys:
+            if key in kwargs:
+                if key == 'config_item_id':
+                    parameters['configItemId'] = kwargs[key]
+                    continue
+                if key == 'test_dataset_id':
+                    parameters['testDatasetId'] = kwargs[key]
+                    continue
+                if key == 'truth_dataset_id':
+                    parameters['truthDatasetId'] = kwargs[key]
+                    continue
+                parameters[key] = kwargs[key]
+        response = self.request('midas.tracker.scalar.add', parameters)
+        return response
+
+    def upload_json_results(self, token, filepath, community_id,
+                            producer_display_name, metric_name,
+                            producer_revision, submit_time, value, **kwargs):
+        """Upload a json file containing numeric scoring results to be added
+        as scalars. File is parsed and then deleted from the server.
+
+        :param token: A valid token for the user in question.
+        :param filepath: The path to the JSON file.
+        :param community_id: The id of the community that owns the producer.
+        :param producer_display_name: The display name of the producer.
+        :param producer_revision: The repository revision of the producer
+        that produced this value.
+        :param submit_time: The submit timestamp. Must be parseable with PHP
+        strtotime().
+        :param config_item_id: (optional) If this value pertains to a specific
+        configuration item, pass its id here.
+        :param test_dataset_id: (optional) If this value pertains to a
+        specific test dataset, pass its id here.
+        :param truth_dataset_id: (optional) If this value pertains to a
+        specific ground truth dataset, pass its id here.
+        :param parent_keys: (optional) Semicolon-separated list of parent keys
+        to look for numeric results under. Use '.' to denote nesting, like in
+        normal javascript syntax.
+        :param silent: (optional) If set, do not perform threshold-based email
+        notifications for this scalar.
+        :param unofficial: (optional) If passed, creates an unofficial scalar
+        visible only to the user performing the submission.
+        :returns: The list of scalars that were created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['communityId'] = community_id
+        parameters['producerDisplayName'] = producer_display_name
+        parameters['metricName'] = metric_name
+        parameters['producerRevision'] = producer_revision
+        parameters['submitTime'] = submit_time
+        optional_keys = ['config_item_id', 'test_dataset_id',
+                         'truth_dataset_id', 'silent', 'unofficial']
+        for key in optional_keys:
+            if key in kwargs:
+                if key == 'config_item_id':
+                    parameters['configItemId'] = kwargs[key]
+                    continue
+                if key == 'test_dataset_id':
+                    parameters['testDatasetId'] = kwargs[key]
+                    continue
+                if key == 'truth_dataset_id':
+                    parameters['truthDatasetId'] = kwargs[key]
+                    continue
+                if key == 'parent_keys':
+                    parameters['parentKeys'] = kwargs[key]
+                    continue
+                parameters[key] = kwargs[key]
+        file_payload = open(filepath, filename, 'rb')
+        response = self.request('midas.tracker.results.upload.json',
+                                parameters, file_payload)
+        return response
