@@ -20,8 +20,6 @@ Requirements
 
 * `Python <http://www.python.org/>`_ version 2.6 or later
 
-* `simplejson <http://simplejson.readthedocs.org/en/latest/index.html>`_ Python package
-
 * `requests <http://docs.python-requests.org/en/latest/index.html>`_ Python package
 
 
