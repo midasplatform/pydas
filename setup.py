@@ -48,6 +48,8 @@ setup(name='pydas',
     url='http://github.com/midasplatform/pydas',
     packages=packages,
     install_requires=requires,
+    license='Apache 2.0',
+    zip_safe=True,
     classifiers=(
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
