@@ -35,7 +35,7 @@ if sys.argv[-1] == 'publish':
 
 packages = ['pydas']
 
-version = '0.2.27'
+version = '0.2.28'
 
 requires = ['requests']
 
