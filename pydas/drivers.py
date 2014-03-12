@@ -712,7 +712,7 @@ class TrackerDriver(BaseDriver):
 
     def upload_json_results(self, token, filepath, community_id,
                             producer_display_name, metric_name,
-                            producer_revision, submit_time, value, **kwargs):
+                            producer_revision, submit_time, **kwargs):
         """Upload a json file containing numeric scoring results to be added
         as scalars. File is parsed and then deleted from the server.
 
@@ -763,7 +763,7 @@ class TrackerDriver(BaseDriver):
                     parameters['parentKeys'] = kwargs[key]
                     continue
                 parameters[key] = kwargs[key]
-        file_payload = open(filepath, filename, 'rb')
+        file_payload = open(filepath, 'rb')
         response = self.request('midas.tracker.results.upload.json',
                                 parameters, file_payload)
         return response
