@@ -1,5 +1,5 @@
 .. pydas documentation master file, created by
-   sphinx-quickstart on Tue Feb  7 10:39:29 2012.
+   sphinx-quickstart on Wed Mar  5 11:00:00 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 

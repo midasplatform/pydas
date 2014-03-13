@@ -1,3 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#
+# Library:   pydas
+#
+# Copyright 2010 Kitware Inc. 28 Corporate Drive,
+# Clifton Park, NY, 12065, USA.
+#
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 ( the "License" );
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+###############################################################################
+
 """
 Will version Pydas.
 
@@ -17,7 +43,6 @@ class Usage(Exception):
 
 
 def version(versioner):
-
     conf_lines = []
     conf = open('docs/source/conf.py', 'r')
     for line in conf:
@@ -35,18 +60,18 @@ def version(versioner):
 
         match = re.match('release = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
-                rel = {}
-                rel['major'] = match.group(1)
-                rel['minor'] = match.group(2)
-                rel['patch'] = match.group(3)
-                rel[versioner] = str(int(rel[versioner]) + 1)
-                if versioner == 'major':
-                    rel['minor'] = '0'
-                    rel['patch'] = '0'
-                if versioner == 'minor':
-                    rel['patch'] = '0'
+            rel = {}
+            rel['major'] = match.group(1)
+            rel['minor'] = match.group(2)
+            rel['patch'] = match.group(3)
+            rel[versioner] = str(int(rel[versioner]) + 1)
+            if versioner == 'major':
+                rel['minor'] = '0'
+                rel['patch'] = '0'
+            if versioner == 'minor':
+                rel['patch'] = '0'
 
-                line = "release = '" + rel['major'] + "." + rel['minor'] + "." + rel['patch'] + "'\n"
+            line = "release = '" + rel['major'] + "." + rel['minor'] + "." + rel['patch'] + "'\n"
 
         conf_lines.append(line)
     conf.close()
@@ -55,26 +80,28 @@ def version(versioner):
     conf.write(''.join(conf_lines))
     conf.close()
 
+    new_version = None
+    old_version = None
     init_lines = []
     init = open('pydas/__init__.py', 'r')
     for line in init:
 
         match = re.match('__version__ = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
-                version = {}
-                version['major'] = match.group(1)
-                version['minor'] = match.group(2)
-                version['patch'] = match.group(3)
-                old_version = version['major'] + "." + version['minor'] + "." + version['patch']
-                version[versioner] = str(int(version[versioner]) + 1)
-                if versioner == 'major':
-                    version['minor'] = '0'
-                    version['patch'] = '0'
-                if versioner == 'minor':
-                    version['patch'] = '0'
-                new_version = version['major'] + "." + version['minor'] + "." + version['patch']
+            version = {}
+            version['major'] = match.group(1)
+            version['minor'] = match.group(2)
+            version['patch'] = match.group(3)
+            old_version = version['major'] + "." + version['minor'] + "." + version['patch']
+            version[versioner] = str(int(version[versioner]) + 1)
+            if versioner == 'major':
+                version['minor'] = '0'
+                version['patch'] = '0'
+            if versioner == 'minor':
+                version['patch'] = '0'
+            new_version = version['major'] + "." + version['minor'] + "." + version['patch']
 
-                line = "__version__ = \'%s\'\n" % new_version
+            line = "__version__ = \'%s\'\n" % new_version
 
         init_lines.append(line)
     init.close()
@@ -89,20 +116,20 @@ def version(versioner):
 
         match = re.match('version = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
-                version = {}
-                version['major'] = match.group(1)
-                version['minor'] = match.group(2)
-                version['patch'] = match.group(3)
-                old_version = version['major'] + "." + version['minor'] + "." + version['patch']
-                version[versioner] = str(int(version[versioner]) + 1)
-                if versioner == 'major':
-                    version['minor'] = '0'
-                    version['patch'] = '0'
-                if versioner == 'minor':
-                    version['patch'] = '0'
-                new_version = version['major'] + "." + version['minor'] + "." + version['patch']
+            version = {}
+            version['major'] = match.group(1)
+            version['minor'] = match.group(2)
+            version['patch'] = match.group(3)
+            old_version = version['major'] + "." + version['minor'] + "." + version['patch']
+            version[versioner] = str(int(version[versioner]) + 1)
+            if versioner == 'major':
+                version['minor'] = '0'
+                version['patch'] = '0'
+            if versioner == 'minor':
+                version['patch'] = '0'
+            new_version = version['major'] + "." + version['minor'] + "." + version['patch']
 
-                line = "version = \'%s\'\n" % new_version
+            line = "version = \'%s\'\n" % new_version
 
         setup_lines.append(line)
     setup.close()
@@ -122,8 +149,7 @@ def main(argv=None):
             opts, args = getopt.getopt(argv[1:], "h", ["help"])
         except getopt.error, msg:
             raise Usage(msg)
-        version_types = ['major', 'minor', 'patch']
-        if(len(args) == 0):
+        if len(args) == 0:
             versioner = 'patch'
         else:
             if args[0] not in version_types:
@@ -132,10 +158,11 @@ def main(argv=None):
         version(versioner)
 
     except Usage, err:
-        print >>sys.stderr, err.msg
-        print >>sys.stderr, "for help use --help"
+        print >> sys.stderr, err.msg
+        print >> sys.stderr, "for help use --help"
         print "Usage: python version.py [major|minor|patch], no argument defaults to patch"
         return 2
+
 
 if __name__ == "__main__":
     sys.exit(main())

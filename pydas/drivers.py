@@ -1,4 +1,4 @@
-#!/usr/bin/evn python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ################################################################################
@@ -30,8 +30,10 @@ functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
 
 import json
-import requests as http
 import os
+
+import requests as http
+
 from pydas.exceptions import PydasException
 import pydas.retry as retry
 
@@ -96,7 +98,6 @@ class BaseDriver(object):
         :returns: Dictionary representing the json response to the request.
         """
         method_url = self.full_url + method
-        request = None
         if file_payload:
             request = http.put(method_url,
                                data=file_payload.read(),
@@ -124,8 +125,8 @@ class BaseDriver(object):
 
         if response['stat'] != 'ok':
             exception = PydasException("Request failed with Midas error code "
-                                 "%s: %s" % (response['code'],
-                                             response['message']))
+                                       "%s: %s" % (response['code'],
+                                                   response['message']))
             exception.code = response['code']
             exception.method = method
             raise exception
@@ -142,13 +143,13 @@ class BaseDriver(object):
         :returns: String of the token to be used for interaction with the api until expiration.
         """
         parameters = dict()
-        parameters['email'] = BaseDriver.email = cur_email     # Cache email
+        parameters['email'] = BaseDriver.email = cur_email  # Cache email
         parameters['apikey'] = BaseDriver.apikey = cur_apikey  # Cache api key
         parameters['appname'] = application
         response = self.request('midas.login', parameters)
         if 'token' in response:  # normal case
             return response['token']
-        if 'mfa_token_id':       # case with multi-factor authentication
+        if 'mfa_token_id':  # case with multi-factor authentication
             return response['mfa_token_id']
 
 
@@ -338,7 +339,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.delete', parameters)
         return response
 
-    def move_folder(self, token, item_id, dest_folder_id):
+    def move_folder(self, token, folder_id, dest_folder_id):
         """Move a folder to the desination folder.
 
         :param token: A valid token for the user in question.
@@ -348,7 +349,7 @@ class CoreDriver(BaseDriver):
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['id'] = item_id
+        parameters['id'] = folder_id
         parameters['dstfolderid'] = dest_folder_id
         response = self.request('midas.folder.move', parameters)
         return response
@@ -407,7 +408,7 @@ class CoreDriver(BaseDriver):
                            params=parameters,
                            verify=False)
         filename = request.headers['content-disposition'][21:].strip('"')
-        return (filename, request.iter_content(chunk_size=10 * 1024))
+        return filename, request.iter_content(chunk_size=10 * 1024)
 
     def delete_item(self, token, item_id):
         """Delete the item with the passed in item_id.
@@ -422,7 +423,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.delete', parameters)
         return response
 
-    def get_item_metadata(self, item, token=None, revision=None):
+    def get_item_metadata(self, item_id, token=None, revision=None):
         """Get the metadata associated with an item.
 
         :param item_id: The id of the item for which metadata will be returned
@@ -431,7 +432,7 @@ class CoreDriver(BaseDriver):
         :returns: List of dictionaries containing item metadata.
         """
         parameters = dict()
-        parameters['id'] = item
+        parameters['id'] = item_id
         if token:
             parameters['token'] = token
         if revision:
@@ -491,15 +492,30 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.move', parameters)
         return response
 
+    def search_item_by_name(self, name, token=None):
+        """Return all items.
+
+        :param name: The name of the item to search by.
+        :param token: (optional) A valid token for the user in question.
+        :returns: A list of all items with the given name.
+        """
+        parameters = dict()
+        parameters['name'] = name
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.item.searchbyname', parameters)
+        return response['items']
+
     def generate_upload_token(self, token, item_id, filename, checksum=None):
         """Generate a token to use for upload.
 
         Midas uses a individual token for each upload. The token corresponds to
         the file specified and that file only. Passing the MD5 checksum allows
-        the server to determine if the file is already in the assetstore.
+        the server to determine if the file is already in the asset store.
 
         :param token: A valid token for the user in question.
-        :param item_id: The id of the item in which to upload the file as a bitstream.
+        :param item_id: The id of the item in which to upload the file as a
+        bitstream.
         :param filename: The name of the file to generate the upload token for.
         :param checksum: (optional) The checksum of the file to upload.
         :returns: String of the upload token.
@@ -508,7 +524,7 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['itemid'] = item_id
         parameters['filename'] = filename
-        if not checksum == None:
+        if not checksum is None:
             parameters['checksum'] = checksum
         response = self.request('midas.upload.generatetoken', parameters)
         return response['token']
@@ -518,13 +534,18 @@ class CoreDriver(BaseDriver):
         item is not specified.
 
         :param uploadtoken: The upload token (returned by generate_upload_token)
-        :param filename: The upload filename. Also used as the path to the file, if 'filepath' is not set.
+        :param filename: The upload filename. Also used as the path to the file,
+        if 'filepath' is not set.
         :param mode: (optional) Stream or multipart. Default is stream.
         :param folderid: (optional) The id of the folder to upload into.
-        :param item_id: (optional) If set, will create a new revision in the existing item.
-        :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
+        :param item_id: (optional) If set, will create a new revision in the
+        existing item.
+        :param revision: (optional) If set, will add a new file into an
+        existing revision. Set this to "head" to add to the most recent
+        revision.
         :param filepath: (optional) The path to the file.
-        :returns: Dictionary containing the details of the item created or changed.
+        :returns: Dictionary containing the details of the item created or
+        changed.
         """
         parameters = dict()
         parameters['uploadtoken'] = uploadtoken
@@ -554,7 +575,8 @@ class CoreDriver(BaseDriver):
 
         :param search: The search criterion.
         :param token: (optional) The credentials to use when searching.
-        :returns: Dictionary containing the search result. Notable is the dictionary item 'results', which is a list of item details.
+        :returns: Dictionary containing the search result. Notable is the
+        dictionary item 'results', which is a list of item details.
         """
         parameters = dict()
         parameters['search'] = search
@@ -579,7 +601,8 @@ class BatchmakeDriver(BaseDriver):
         response = self.request('midas.batchmake.add.condor.dag', parameters)
         return response
 
-    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename, postfilename):
+    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename,
+                       postfilename):
         """Adds a condor dag job to the condor dag associated with this batchmake task
         """
         parameters = dict()
@@ -624,3 +647,177 @@ class MultiFactorAuthenticationDriver(BaseDriver):
         parameters['otp'] = one_time_pass
         response = self.request('midas.mfa.otp.login', parameters)
         return response['token']
+
+
+class ThumbnailCreatorDriver(BaseDriver):
+    """Driver for the Midas thumbnailcreator module's API methods.
+    """
+
+    def create_big_thumbnail(self, token, bitstream_id, item_id, width=575):
+        """Create a big thumbnail for the given bitstream with the given width.
+        It is used as the main image of the given item and shown in the item
+        view page.
+
+        :param token: A valid token for the user in question.
+        :param bitstream_id: The bitstream from which to create the thumbnail.
+        :param item_id: The item on which to set the thumbnail.
+        :param width: (optional) The width in pixels to which to resize (aspect
+        ratio will be preserved). Defaults to 575.
+        :returns: The ItemthumbnailDao object that was created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['bitstreamId'] = bitstream_id
+        parameters['itemId'] = item_id
+        parameters['width'] = width
+        response = self.request('midas.thumbnailcreator.create.big.thumbnail',
+                                parameters)
+        return response
+
+    def create_small_thumbnail(self, token, item_id):
+        """Create a 100x100 small thumbnail for the given item. It is used for
+        preview purpose and displayed in the 'preview' and 'thumbnails'
+        sidebar sections.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The item on which to set the thumbnail.
+        :returns: The item object (with the new thumbnail id) and the path
+        where the newly created thumbnail is stored.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['itemId'] = item_id
+        response = self.request('midas.thumbnailcreator.create.small.thumbnail',
+                                parameters)
+        return response
+
+
+class TrackerDriver(BaseDriver):
+    """Driver for the Midas tracker module's api methods.
+    """
+
+    def associate_item_with_scalar_data(self, token, item_id, scalar_id,
+                                        label):
+        """Associate a result item with a particular scalar value.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The id of the item to associate with the scalar.
+        :param scalar_id: Scalar id with which to associate the item.
+        :param label: The label describing the nature of the association.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['scalarIds'] = scalar_id
+        parameters['itemId'] = item_id
+        parameters['label'] = label
+        self.request('midas.tracker.item.associate', parameters)
+
+    def add_scalar_data(self, token, community_id, producer_display_name,
+                        metric_name, producer_revision, submit_time, value,
+                        **kwargs):
+        """Create a new scalar data point.
+
+        :param token: A valid token for the user in question.
+        :param community_id: The id of the community that owns the producer.
+        :param producer_display_name: The display name of the producer.
+        :param metric_name: The metric name that identifies which trend this
+        point belongs to.
+        :param producer_revision: The repository revision of the producer that
+        produced this value.
+        :param submit_time: The submit timestamp. Must be parsable with PHP
+        strtotime().
+        :param value: The value of the scalar.
+        :param config_item_id: (optional) If this value pertains to a specific
+        configuration item, pass its id here.
+        :param test_dataset_id: (optional) If this value pertains to a
+        specific test dataset, pass its id here.
+        :param truth_dataset_id: (optional) If this value pertains to a
+        specific ground truth dataset, pass its id here.
+        :param silent: (optional) If set, do not perform threshold-based email
+        notifications for this scalar.
+        :param unofficial: (optional) If passed, creates an unofficial scalar
+        visible only to the user performing the submission.
+        :returns: The scalar object that was created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['communityId'] = community_id
+        parameters['producerDisplayName'] = producer_display_name
+        parameters['metricName'] = metric_name
+        parameters['producerRevision'] = producer_revision
+        parameters['submitTime'] = submit_time
+        parameters['value'] = value
+        optional_keys = ['config_item_id', 'test_dataset_id',
+                         'truth_dataset_id', 'silent', 'unofficial']
+        for key in optional_keys:
+            if key in kwargs:
+                if key == 'config_item_id':
+                    parameters['configItemId'] = kwargs[key]
+                    continue
+                if key == 'test_dataset_id':
+                    parameters['testDatasetId'] = kwargs[key]
+                    continue
+                if key == 'truth_dataset_id':
+                    parameters['truthDatasetId'] = kwargs[key]
+                    continue
+                parameters[key] = kwargs[key]
+        response = self.request('midas.tracker.scalar.add', parameters)
+        return response
+
+    def upload_json_results(self, token, filepath, community_id,
+                            producer_display_name, metric_name,
+                            producer_revision, submit_time, **kwargs):
+        """Upload a json file containing numeric scoring results to be added
+        as scalars. File is parsed and then deleted from the server.
+
+        :param token: A valid token for the user in question.
+        :param filepath: The path to the JSON file.
+        :param community_id: The id of the community that owns the producer.
+        :param producer_display_name: The display name of the producer.
+        :param producer_revision: The repository revision of the producer
+        that produced this value.
+        :param submit_time: The submit timestamp. Must be parsable with PHP
+        strtotime().
+        :param config_item_id: (optional) If this value pertains to a specific
+        configuration item, pass its id here.
+        :param test_dataset_id: (optional) If this value pertains to a
+        specific test dataset, pass its id here.
+        :param truth_dataset_id: (optional) If this value pertains to a
+        specific ground truth dataset, pass its id here.
+        :param parent_keys: (optional) Semicolon-separated list of parent keys
+        to look for numeric results under. Use '.' to denote nesting, like in
+        normal javascript syntax.
+        :param silent: (optional) If set, do not perform threshold-based email
+        notifications for this scalar.
+        :param unofficial: (optional) If passed, creates an unofficial scalar
+        visible only to the user performing the submission.
+        :returns: The list of scalars that were created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['communityId'] = community_id
+        parameters['producerDisplayName'] = producer_display_name
+        parameters['metricName'] = metric_name
+        parameters['producerRevision'] = producer_revision
+        parameters['submitTime'] = submit_time
+        optional_keys = ['config_item_id', 'test_dataset_id',
+                         'truth_dataset_id', 'silent', 'unofficial']
+        for key in optional_keys:
+            if key in kwargs:
+                if key == 'config_item_id':
+                    parameters['configItemId'] = kwargs[key]
+                    continue
+                if key == 'test_dataset_id':
+                    parameters['testDatasetId'] = kwargs[key]
+                    continue
+                if key == 'truth_dataset_id':
+                    parameters['truthDatasetId'] = kwargs[key]
+                    continue
+                if key == 'parent_keys':
+                    parameters['parentKeys'] = kwargs[key]
+                    continue
+                parameters[key] = kwargs[key]
+        file_payload = open(filepath, 'rb')
+        response = self.request('midas.tracker.results.upload.json',
+                                parameters, file_payload)
+        return response

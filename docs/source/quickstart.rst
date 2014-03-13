@@ -67,10 +67,10 @@ Uploading Bitstream from folders_as_items/item2/bitstream2_2.txt (2 of 2)
 This upload will create a folder in your Midas private folder called folders_as_items, and in that folder will create two items, item1 and item2.  item1 will have 2 bitstreams, and item2 will have two bitstreams, corresponding to the files that are in each of the leaf folders.
 
 
-Upload example for Dicom data
+Upload example for DICOM data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's say you have a folder that contains subfolders, each of the subfolders is a Dicom series.  You would like to upload these subfolders such that all of the files in the subfolders are combined into one item, and once the item is created, Dicom Metadata is extracted from the item.  In this case we will treat the subfolders as leaf folders, and we will also add a callback after the upload of the item to extract Dicom Metadata::
+Let's say you have a folder that contains subfolders, each of the subfolders is a DICOM series.  You would like to upload these subfolders such that all of the files in the subfolders are combined into one item, and once the item is created, DICOM Metadata is extracted from the item.  In this case we will treat the subfolders as leaf folders, and we will also add a callback after the upload of the item to extract DICOM Metadata::
 
     dicom_data
         series1

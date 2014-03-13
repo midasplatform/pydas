@@ -1,4 +1,4 @@
-#!/usr/bin/evn python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -31,13 +31,14 @@ import getpass
 import glob
 import os
 import os.path
-from core import Communicator
 import hashlib
+
+from core import Communicator
 import session
 
 
 def login(email=None, password=None, api_key=None, application='Default',
-    url=None):
+          url=None):
     """Do the legwork of logging into Midas, storing the api_key and token
 
     :param email: (optional) Email address to login with. If not set, the
@@ -211,14 +212,14 @@ def _create_bitstream(filepath, local_file, item_id, log_ind=None):
         session.token, item_id, local_file, checksum)
 
     if upload_token != "":
-        log_trace = "Uploading Bitstream from %s" % (filepath)
-        # only need to peform the upload if we haven't uploaded before
+        log_trace = "Uploading Bitstream from %s" % filepath
+        # only need to perform the upload if we haven't uploaded before
         # in this cae, the upload token would not be empty
         session.communicator.perform_upload(
             upload_token, local_file, filepath=filepath, itemid=item_id)
     else:
-        log_trace = "Adding a bitstream link in this item to an existing"
-        "bitstream from %s" % (filepath)
+        log_trace = "Adding a bitstream link in this item to an existing" \
+            "bitstream from %s" % filepath
 
     if log_ind is not None:
         log_trace = log_trace + log_ind
@@ -509,10 +510,10 @@ def _download_item(item_id, path='.'):
         item_id, session.token)
     item_path = os.path.join(path, filename)
     print 'Creating File at %s' % item_path
-    outFile = open(item_path, 'wb')
+    out_file = open(item_path, 'wb')
     for block in content_iter:
-        outFile.write(block)
-    outFile.close()
+        out_file.write(block)
+    out_file.close()
 
 
 def download(server_path, local_path='.'):

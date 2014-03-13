@@ -12,15 +12,13 @@ Pydas is a Python client library for the Midas3 server.
 .. providing links means more things to maintain and break
 
 Requirements
--------------
+------------
 
 * A working `Midas3 <http://www.midasplatform.org>`_ server instance
 
 * An `enabled <http://www.kitware.com/midaswiki/index.php/Documentation/Latest/User/Administration/ManagePlugins>`_  web api plugin for your Midas3 instance
 
 * `Python <http://www.python.org/>`_ version 2.6 or later
-
-* `simplejson <http://simplejson.readthedocs.org/en/latest/index.html>`_ Python package
 
 * `requests <http://docs.python-requests.org/en/latest/index.html>`_ Python package
 
@@ -46,7 +44,7 @@ Checking your Installation
 
 >>> import pydas
 >>> pydas.version
-'0.2.24'
+'0.2.29'
 
 You can check the version of your Midas3 server via Pydas, which will ensure that
 Pydas can communicate with your server instance and that your server's web api plugin is active.
@@ -55,5 +53,5 @@ Pydas can communicate with your server instance and that your server's web api p
 >>> import pydas
 >>> core_driver = pydas.driver.CoreDriver('http://domain/midas3')
 >>> core_driver.get_server_version()
-'3.2.7'
+'3.2.14'
 

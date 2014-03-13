@@ -1,4 +1,4 @@
-#!/usr/bin/evn python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -29,32 +29,35 @@ import sys
 
 from setuptools import setup
 
+
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
 packages = ['pydas']
 
-version = '0.2.27'
+version = '0.2.29'
 
 requires = ['requests']
 
 setup(name='pydas',
-    version=version,
-    description='Upload data to a Midas-based application with Python.',
-    long_description=open('README.rst').read(),
-    author='Patrick Reynolds',
-    author_email='patrick.reynolds@kitware.com',
-    url='http://github.com/midasplatform/pydas',
-    packages=packages,
-    install_requires=requires,
-    classifiers=(
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        ),
-    )
+      version=version,
+      description='Upload data to a Midas-based application with Python.',
+      long_description=open('README.rst').read(),
+      author='Patrick Reynolds',
+      author_email='patrick.reynolds@kitware.com',
+      url='http://github.com/midasplatform/pydas',
+      packages=packages,
+      install_requires=requires,
+      license='Apache 2.0',
+      zip_safe=True,
+      classifiers=(
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Developers',
+          'Natural Language :: English',
+          'License :: OSI Approved :: Apache Software License',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+      ),
+      )

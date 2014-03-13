@@ -1,4 +1,4 @@
-#!/usr/bin/evn python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -41,11 +41,12 @@ class Communicator(object):
         if drivers is None:
             self._drivers = []
             import inspect
-            baseDriverClass = pydas.drivers.BaseDriver
+
+            base_driver_class = pydas.drivers.BaseDriver
             for name, obj in inspect.getmembers(pydas.drivers):
                 if inspect.isclass(obj):
-                    classHierarchy = inspect.getmro(obj)
-                    if baseDriverClass in classHierarchy and obj != baseDriverClass:
+                    class_hierarchy = inspect.getmro(obj)
+                    if base_driver_class in class_hierarchy and obj != base_driver_class:
                         instance = obj(url)
                         self._drivers.append(instance)
         else:
