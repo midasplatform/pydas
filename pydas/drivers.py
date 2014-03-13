@@ -639,6 +639,48 @@ class MultiFactorAuthenticationDriver(BaseDriver):
         response = self.request('midas.mfa.otp.login', parameters)
         return response['token']
 
+class ThumbnailCreatorDriver(BaseDriver):
+    """Driver for the Midas thumbnailcreator module's API methods.
+    """
+
+    def create_big_thumbnail(self, token, bitstream_id, item_id, width=575):
+        """Create a big thumbnail for the given bitstream with the given width.
+        It is used as the main image of the given item and shown in the item
+        view page.
+
+        :param token: A valid token for the user in question.
+        :param bitstream_id: The bitstream from which to create the thumbnail.
+        :param item_id: The item on which to set the thumbnail.
+        :param width: (optional) The width in pixels to which to resize (aspect
+        ratio will be preserved). Defaults to 575.
+        :returns: The ItemthumbnailDao object that was created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['bitstreamId'] = bitstream_id
+        parameters['itemId'] = item_id
+        parameters['width'] = width
+        response = self.request('midas.thumbnailcreator.create.big.thumbnail',
+                                parameters)
+        return response
+
+    def create_small_thumbnail(self, token, item_id):
+        """Create a 100x100 small thumbnail for the given item. It is used for
+        preview purpose and displayed in the 'preview' and 'thumbnails'
+        sidebar sections.
+
+        :param token: A valid token for the user in question.
+        :param item_id: The item on which to set the thumbnail.
+        :returns: The item object (with the new thumbnail id) and the path
+        where the newly created thumbnail is stored.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['itemId'] = item_id
+        response = self.request('midas.thumbnailcreator.create.small.thumbnail',
+                                parameters)
+        return response
+
 class TrackerDriver(BaseDriver):
     """Driver for the Midas tracker module's api methods.
     """
@@ -646,6 +688,7 @@ class TrackerDriver(BaseDriver):
     def associate_item_with_scalar_data(self, token, item_id, scalar_id,
                                         label):
         """Associate a result item with a particular scalar value.
+
         :param token: A valid token for the user in question.
         :param item_id: The id of the item to associate with the scalar.
         :param scalar_id: Scalar id with which to associate the item.
