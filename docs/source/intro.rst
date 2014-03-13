@@ -12,7 +12,7 @@ Pydas is a Python client library for the Midas3 server.
 .. providing links means more things to maintain and break
 
 Requirements
--------------
+------------
 
 * A working `Midas3 <http://www.midasplatform.org>`_ server instance
 

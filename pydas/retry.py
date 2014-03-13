@@ -24,10 +24,11 @@
 #
 ###############################################################################
 
-import pydas.exceptions
-import pydas.session as session
 import time
 import getpass
+
+import pydas.exceptions
+import pydas.session as session
 
 
 def reauth(fn):
@@ -39,8 +40,8 @@ def reauth(fn):
     @wraps(fn)
     def wrapper(*args, **kw):
         try:
-            retVal = fn(*args, **kw)
-            return retVal
+            ret_val = fn(*args, **kw)
+            return ret_val
         except pydas.exceptions.PydasException as detail:
             print "Caught PydasException: ", detail
             # Unable to authenticate using the given credentials.
@@ -59,20 +60,21 @@ def reauth(fn):
             # get the instance of the CoreDriver and set it as "that"
             that = args[0]
             session.token = that.login_with_api_key(that.__class__.email,
-                that.__class__.apikey)
+                                                    that.__class__.apikey)
             if session.communicator is not None:  # We're using the high-level api
                 if len(session.token) < 10:  # HACK to check for mfa being enabled
                     one_time_pass = getpass.getpass('One-Time Password: ')
                     session.token = session.communicator.mfa_otp_login(session.token,
-                        one_time_pass)
+                                                                       one_time_pass)
             print session.token
 
             # now fix up the arguments of the original call to use the renewed token
-            argsList = list(args)
-            argsList[2]['token'] = session.token
-            args = tuple(argsList)
+            args_list = list(args)
+            args_list[2]['token'] = session.token
+            args = tuple(args_list)
 
             # try the api call again
-            retVal = fn(*args, **kw)
-            return retVal
+            ret_val = fn(*args, **kw)
+            return ret_val
+
     return wrapper

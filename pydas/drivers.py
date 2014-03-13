@@ -30,8 +30,10 @@ functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
 
 import json
-import requests as http
 import os
+
+import requests as http
+
 from pydas.exceptions import PydasException
 import pydas.retry as retry
 
@@ -96,7 +98,6 @@ class BaseDriver(object):
         :returns: Dictionary representing the json response to the request.
         """
         method_url = self.full_url + method
-        request = None
         if file_payload:
             request = http.put(method_url,
                                data=file_payload.read(),
@@ -124,8 +125,8 @@ class BaseDriver(object):
 
         if response['stat'] != 'ok':
             exception = PydasException("Request failed with Midas error code "
-                                 "%s: %s" % (response['code'],
-                                             response['message']))
+                                       "%s: %s" % (response['code'],
+                                                   response['message']))
             exception.code = response['code']
             exception.method = method
             raise exception
@@ -142,13 +143,13 @@ class BaseDriver(object):
         :returns: String of the token to be used for interaction with the api until expiration.
         """
         parameters = dict()
-        parameters['email'] = BaseDriver.email = cur_email     # Cache email
+        parameters['email'] = BaseDriver.email = cur_email  # Cache email
         parameters['apikey'] = BaseDriver.apikey = cur_apikey  # Cache api key
         parameters['appname'] = application
         response = self.request('midas.login', parameters)
         if 'token' in response:  # normal case
             return response['token']
-        if 'mfa_token_id':       # case with multi-factor authentication
+        if 'mfa_token_id':  # case with multi-factor authentication
             return response['mfa_token_id']
 
 
@@ -338,7 +339,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.delete', parameters)
         return response
 
-    def move_folder(self, token, item_id, dest_folder_id):
+    def move_folder(self, token, folder_id, dest_folder_id):
         """Move a folder to the desination folder.
 
         :param token: A valid token for the user in question.
@@ -348,7 +349,7 @@ class CoreDriver(BaseDriver):
         """
         parameters = dict()
         parameters['token'] = token
-        parameters['id'] = item_id
+        parameters['id'] = folder_id
         parameters['dstfolderid'] = dest_folder_id
         response = self.request('midas.folder.move', parameters)
         return response
@@ -407,7 +408,7 @@ class CoreDriver(BaseDriver):
                            params=parameters,
                            verify=False)
         filename = request.headers['content-disposition'][21:].strip('"')
-        return (filename, request.iter_content(chunk_size=10 * 1024))
+        return filename, request.iter_content(chunk_size=10 * 1024)
 
     def delete_item(self, token, item_id):
         """Delete the item with the passed in item_id.
@@ -422,7 +423,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.delete', parameters)
         return response
 
-    def get_item_metadata(self, item, token=None, revision=None):
+    def get_item_metadata(self, item_id, token=None, revision=None):
         """Get the metadata associated with an item.
 
         :param item_id: The id of the item for which metadata will be returned
@@ -431,7 +432,7 @@ class CoreDriver(BaseDriver):
         :returns: List of dictionaries containing item metadata.
         """
         parameters = dict()
-        parameters['id'] = item
+        parameters['id'] = item_id
         if token:
             parameters['token'] = token
         if revision:
@@ -510,10 +511,11 @@ class CoreDriver(BaseDriver):
 
         Midas uses a individual token for each upload. The token corresponds to
         the file specified and that file only. Passing the MD5 checksum allows
-        the server to determine if the file is already in the assetstore.
+        the server to determine if the file is already in the asset store.
 
         :param token: A valid token for the user in question.
-        :param item_id: The id of the item in which to upload the file as a bitstream.
+        :param item_id: The id of the item in which to upload the file as a
+        bitstream.
         :param filename: The name of the file to generate the upload token for.
         :param checksum: (optional) The checksum of the file to upload.
         :returns: String of the upload token.
@@ -522,7 +524,7 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['itemid'] = item_id
         parameters['filename'] = filename
-        if not checksum == None:
+        if not checksum is None:
             parameters['checksum'] = checksum
         response = self.request('midas.upload.generatetoken', parameters)
         return response['token']
@@ -532,13 +534,18 @@ class CoreDriver(BaseDriver):
         item is not specified.
 
         :param uploadtoken: The upload token (returned by generate_upload_token)
-        :param filename: The upload filename. Also used as the path to the file, if 'filepath' is not set.
+        :param filename: The upload filename. Also used as the path to the file,
+        if 'filepath' is not set.
         :param mode: (optional) Stream or multipart. Default is stream.
         :param folderid: (optional) The id of the folder to upload into.
-        :param item_id: (optional) If set, will create a new revision in the existing item.
-        :param revision: (optional) If set, will add a new file into an existing revision. Set this to "head" to add to the most recent revision.
+        :param item_id: (optional) If set, will create a new revision in the
+        existing item.
+        :param revision: (optional) If set, will add a new file into an
+        existing revision. Set this to "head" to add to the most recent
+        revision.
         :param filepath: (optional) The path to the file.
-        :returns: Dictionary containing the details of the item created or changed.
+        :returns: Dictionary containing the details of the item created or
+        changed.
         """
         parameters = dict()
         parameters['uploadtoken'] = uploadtoken
@@ -568,7 +575,8 @@ class CoreDriver(BaseDriver):
 
         :param search: The search criterion.
         :param token: (optional) The credentials to use when searching.
-        :returns: Dictionary containing the search result. Notable is the dictionary item 'results', which is a list of item details.
+        :returns: Dictionary containing the search result. Notable is the
+        dictionary item 'results', which is a list of item details.
         """
         parameters = dict()
         parameters['search'] = search
@@ -593,7 +601,8 @@ class BatchmakeDriver(BaseDriver):
         response = self.request('midas.batchmake.add.condor.dag', parameters)
         return response
 
-    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename, postfilename):
+    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename,
+                       postfilename):
         """Adds a condor dag job to the condor dag associated with this batchmake task
         """
         parameters = dict()
@@ -639,6 +648,7 @@ class MultiFactorAuthenticationDriver(BaseDriver):
         response = self.request('midas.mfa.otp.login', parameters)
         return response['token']
 
+
 class ThumbnailCreatorDriver(BaseDriver):
     """Driver for the Midas thumbnailcreator module's API methods.
     """
@@ -681,6 +691,7 @@ class ThumbnailCreatorDriver(BaseDriver):
                                 parameters)
         return response
 
+
 class TrackerDriver(BaseDriver):
     """Driver for the Midas tracker module's api methods.
     """
@@ -713,7 +724,7 @@ class TrackerDriver(BaseDriver):
         point belongs to.
         :param producer_revision: The repository revision of the producer that
         produced this value.
-        :param submit_time: The submit timestamp. Must be parseable with PHP
+        :param submit_time: The submit timestamp. Must be parsable with PHP
         strtotime().
         :param value: The value of the scalar.
         :param config_item_id: (optional) If this value pertains to a specific
@@ -765,7 +776,7 @@ class TrackerDriver(BaseDriver):
         :param producer_display_name: The display name of the producer.
         :param producer_revision: The repository revision of the producer
         that produced this value.
-        :param submit_time: The submit timestamp. Must be parseable with PHP
+        :param submit_time: The submit timestamp. Must be parsable with PHP
         strtotime().
         :param config_item_id: (optional) If this value pertains to a specific
         configuration item, pass its id here.
