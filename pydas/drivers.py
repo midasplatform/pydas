@@ -692,6 +692,27 @@ class ThumbnailCreatorDriver(BaseDriver):
         return response
 
 
+class SolrDriver(BaseDriver):
+    """Driver for the Midas solr module's api methods.
+    """
+
+    def solr_advanced_search(self, query, token=None, limit=20):
+        """Search item metadata using Apache Solr.
+
+        :param query: The Apache Lucene search query.
+        :param token: (optional) A valid token for the user in question.
+        :param limit: (optional) The limit of the search.
+        :returns: The list of items that match the search query.
+        """
+        parameters = dict()
+        parameters['query'] = query
+        parameters['limit'] = limit
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.solr.search.advanced', parameters)
+        return response
+
+
 class TrackerDriver(BaseDriver):
     """Driver for the Midas tracker module's api methods.
     """
