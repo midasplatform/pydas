@@ -340,7 +340,7 @@ class CoreDriver(BaseDriver):
         return response
 
     def move_folder(self, token, folder_id, dest_folder_id):
-        """Move a folder to the desination folder.
+        """Move a folder to the destination folder.
 
         :param token: A valid token for the user in question.
         :param folder_id: The id of the folder to be moved.
@@ -767,7 +767,7 @@ class TrackerDriver(BaseDriver):
     def upload_json_results(self, token, filepath, community_id,
                             producer_display_name, metric_name,
                             producer_revision, submit_time, **kwargs):
-        """Upload a json file containing numeric scoring results to be added
+        """Upload a JSON file containing numeric scoring results to be added
         as scalars. File is parsed and then deleted from the server.
 
         :param token: A valid token for the user in question.
