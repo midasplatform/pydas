@@ -335,25 +335,31 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.community.list', parameters)
         return response
 
-    def create_folder(self, token, name, parent, **kwargs):
+    def create_folder(self, token, name, parent_id, **kwargs):
         """Create a folder at the destination specified.
 
         :param token: A valid token for the user in question.
         :param name: The name of the folder to be created.
-        :param parent: The id of the targeted parent folder.
+        :param parent_id: The id of the targeted parent folder.
         :param description: (optional) The description text of the folder.
         :param uuid: (optional) The UUID for the folder. It will be generated if not given.
         :param privacy: (optional) The privacy state of the folder ('Public' or 'Private').
+        :param reuse_existing: (optional) If true, will just return the existing folder if there is one with the name
+        provided.
         :returns: Dictionary containing the details of the created folder.
         """
         parameters = dict()
         parameters['token'] = token
         parameters['name'] = name
-        parameters['parentid'] = parent
+        parameters['parentid'] = parent_id
         parameters['description'] = ''
-        optional_keys = ['description', 'uuid', 'privacy']
+        optional_keys = ['description', 'uuid', 'privacy', 'reuse_existing']
         for key in optional_keys:
             if key in kwargs:
+                if key == 'reuse_existing':
+                    if kwargs[key]:
+                        parameters['reuseExisting'] = kwargs[key]
+                    continue
                 parameters[key] = kwargs[key]
         response = self.request('midas.folder.create', parameters)
         return response
@@ -412,12 +418,12 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.move', parameters)
         return response
 
-    def create_item(self, token, name, parentid, **kwargs):
+    def create_item(self, token, name, parent_id, **kwargs):
         """Create an item to the server.
 
         :param token: A valid token for the user in question.
         :param name: The name of the item to be created.
-        :param parentid: The id of the destination folder.
+        :param parent_id: The id of the destination folder.
         :param description: (optional) The description text of the item.
         :param uuid: (optional) The UUID for the item. It will be generated if not given.
         :param privacy: (optional) The privacy state of the item ('Public' or 'Private').
@@ -426,7 +432,7 @@ class CoreDriver(BaseDriver):
         parameters = dict()
         parameters['token'] = token
         parameters['name'] = name
-        parameters['parentid'] = parentid
+        parameters['parentid'] = parent_id
         optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
             if key in kwargs:
