@@ -179,6 +179,14 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.info')
         return response['version']
 
+    def list_modules(self):
+        """List the enabled modules on the server.
+
+        :returns: List of names of the enabled modules.
+        """
+        response = self.request('midas.modules.list')
+        return response['modules']
+
     def list_user_folders(self, token):
         """List the folders in the users home area.
 
@@ -249,6 +257,30 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.user.get', parameters)
         return response
 
+    def create_community(self, token, name, **kwargs):
+        """Create a new community or update an existing one using the uuid.
+
+        :param token: A valid token for the user in question.
+        :param name: The community name.
+        :param description: (optional) The community description.
+        :param uuid: (optional) uuid of the community. If none is passed, will generate one.
+        :param privacy: (optional) Default 'Public', possible values [Public|Private].
+        :param can_join: (optional) Default 'Everyone', possible values [Everyone|Invitation].
+        :returns: The community dao that was created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['name'] = name
+        optional_keys = ['description', 'uuid', 'privacy', 'can_join']
+        for key in optional_keys:
+            if key in kwargs:
+                if key == 'can_join':
+                    parameters['canjoin'] = kwargs[key]
+                    continue
+                parameters[key] = kwargs[key]
+        response = self.request('midas.community.create', parameters)
+        return response
+
     def get_community_by_name(self, name, token=None):
         """Get a community based on its name.
 
@@ -275,6 +307,32 @@ class CoreDriver(BaseDriver):
         if token:
             parameters['token'] = token
         response = self.request('midas.community.get', parameters)
+        return response
+
+    def get_community_children(self, community_id, token=None):
+        """Get the non-recursive children of the passed in community_id.
+
+        :param token: A valid token for the user in question.
+        :param community_id: The id of the requested community.
+        :returns: List of the folders in the community.
+        """
+        parameters = dict()
+        parameters['id'] = community_id
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.community.children', parameters)
+        return response
+
+    def list_communities(self, token=None):
+        """List all communities visible to a user.
+
+        :param token: (optional) A valid token for the user in question.
+        :returns: The list of communities.
+        """
+        parameters = dict()
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.community.list', parameters)
         return response
 
     def create_folder(self, token, name, parent, **kwargs):
