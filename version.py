@@ -50,20 +50,15 @@ def version(versioner):
         if versioner != 'patch':
             match = re.match('version = \'([0-9]*).([0-9]*)\'', line)
             if match is not None:
-                vers = {}
-                vers['major'] = match.group(1)
-                vers['minor'] = match.group(2)
-                vers[versioner] = str(int(vers[versioner]) + 1)
+                ver = {'major': match.group(1), 'minor': match.group(2)}
+                ver[versioner] = str(int(ver[versioner]) + 1)
                 if versioner == 'major':
-                    vers['minor'] = '0'
-                line = "version = '" + vers['major'] + "." + vers['minor'] + "'\n"
+                    ver['minor'] = '0'
+                line = "version = '" + ver['major'] + "." + ver['minor'] + "'\n"
 
         match = re.match('release = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
-            rel = {}
-            rel['major'] = match.group(1)
-            rel['minor'] = match.group(2)
-            rel['patch'] = match.group(3)
+            rel = {'major': match.group(1), 'minor': match.group(2), 'patch': match.group(3)}
             rel[versioner] = str(int(rel[versioner]) + 1)
             if versioner == 'major':
                 rel['minor'] = '0'
@@ -88,18 +83,15 @@ def version(versioner):
 
         match = re.match('__version__ = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
-            version = {}
-            version['major'] = match.group(1)
-            version['minor'] = match.group(2)
-            version['patch'] = match.group(3)
-            old_version = version['major'] + "." + version['minor'] + "." + version['patch']
-            version[versioner] = str(int(version[versioner]) + 1)
+            ver = {'major': match.group(1), 'minor': match.group(2), 'patch': match.group(3)}
+            old_version = ver['major'] + "." + ver['minor'] + "." + ver['patch']
+            ver[versioner] = str(int(ver[versioner]) + 1)
             if versioner == 'major':
-                version['minor'] = '0'
-                version['patch'] = '0'
+                ver['minor'] = '0'
+                ver['patch'] = '0'
             if versioner == 'minor':
-                version['patch'] = '0'
-            new_version = version['major'] + "." + version['minor'] + "." + version['patch']
+                ver['patch'] = '0'
+            new_version = ver['major'] + "." + ver['minor'] + "." + ver['patch']
 
             line = "__version__ = \'%s\'\n" % new_version
 
@@ -116,18 +108,15 @@ def version(versioner):
 
         match = re.match('version = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
-            version = {}
-            version['major'] = match.group(1)
-            version['minor'] = match.group(2)
-            version['patch'] = match.group(3)
-            old_version = version['major'] + "." + version['minor'] + "." + version['patch']
-            version[versioner] = str(int(version[versioner]) + 1)
+            ver = {'major': match.group(1), 'minor': match.group(2), 'patch': match.group(3)}
+            old_version = ver['major'] + "." + ver['minor'] + "." + ver['patch']
+            ver[versioner] = str(int(ver[versioner]) + 1)
             if versioner == 'major':
-                version['minor'] = '0'
-                version['patch'] = '0'
+                ver['minor'] = '0'
+                ver['patch'] = '0'
             if versioner == 'minor':
-                version['patch'] = '0'
-            new_version = version['major'] + "." + version['minor'] + "." + version['patch']
+                ver['patch'] = '0'
+            new_version = ver['major'] + "." + ver['minor'] + "." + ver['patch']
 
             line = "version = \'%s\'\n" % new_version
 

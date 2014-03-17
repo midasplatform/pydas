@@ -35,13 +35,10 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 packages = ['pydas']
-
-version = '0.2.29'
-
 requires = ['requests']
 
 setup(name='pydas',
-      version=version,
+      version='0.2.29',
       description='Upload data to a Midas-based application with Python.',
       long_description=open('README.rst').read(),
       author='Patrick Reynolds',
