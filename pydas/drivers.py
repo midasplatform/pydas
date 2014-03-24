@@ -818,9 +818,9 @@ class TrackerDriver(BaseDriver):
         specific test dataset, pass its id here.
         :param truth_dataset_id: (optional) If this value pertains to a
         specific ground truth dataset, pass its id here.
-        :param silent: (optional) If set, do not perform threshold-based email
+        :param silent: (optional) If true, do not perform threshold-based email
         notifications for this scalar.
-        :param unofficial: (optional) If passed, creates an unofficial scalar
+        :param unofficial: (optional) If true, creates an unofficial scalar
         visible only to the user performing the submission.
         :returns: The scalar object that was created.
         """
@@ -844,6 +844,14 @@ class TrackerDriver(BaseDriver):
                     continue
                 if key == 'truth_dataset_id':
                     parameters['truthDatasetId'] = kwargs[key]
+                    continue
+                if key == 'silent':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
+                    continue
+                if key == 'unofficial':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
                     continue
                 parameters[key] = kwargs[key]
         response = self.request('midas.tracker.scalar.add', parameters)
@@ -872,9 +880,9 @@ class TrackerDriver(BaseDriver):
         :param parent_keys: (optional) Semicolon-separated list of parent keys
         to look for numeric results under. Use '.' to denote nesting, like in
         normal javascript syntax.
-        :param silent: (optional) If set, do not perform threshold-based email
+        :param silent: (optional) If true, do not perform threshold-based email
         notifications for this scalar.
-        :param unofficial: (optional) If passed, creates an unofficial scalar
+        :param unofficial: (optional) If true, creates an unofficial scalar
         visible only to the user performing the submission.
         :returns: The list of scalars that were created.
         """
@@ -900,6 +908,14 @@ class TrackerDriver(BaseDriver):
                     continue
                 if key == 'parent_keys':
                     parameters['parentKeys'] = kwargs[key]
+                    continue
+                if key == 'silent':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
+                    continue
+                if key == 'unofficial':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
                     continue
                 parameters[key] = kwargs[key]
         file_payload = open(filepath, 'rb')
