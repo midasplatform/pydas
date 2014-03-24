@@ -179,6 +179,14 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.info')
         return response['version']
 
+    def list_modules(self):
+        """List the enabled modules on the server.
+
+        :returns: List of names of the enabled modules.
+        """
+        response = self.request('midas.modules.list')
+        return response['modules']
+
     def list_user_folders(self, token):
         """List the folders in the users home area.
 
@@ -249,6 +257,30 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.user.get', parameters)
         return response
 
+    def create_community(self, token, name, **kwargs):
+        """Create a new community or update an existing one using the uuid.
+
+        :param token: A valid token for the user in question.
+        :param name: The community name.
+        :param description: (optional) The community description.
+        :param uuid: (optional) uuid of the community. If none is passed, will generate one.
+        :param privacy: (optional) Default 'Public', possible values [Public|Private].
+        :param can_join: (optional) Default 'Everyone', possible values [Everyone|Invitation].
+        :returns: The community dao that was created.
+        """
+        parameters = dict()
+        parameters['token'] = token
+        parameters['name'] = name
+        optional_keys = ['description', 'uuid', 'privacy', 'can_join']
+        for key in optional_keys:
+            if key in kwargs:
+                if key == 'can_join':
+                    parameters['canjoin'] = kwargs[key]
+                    continue
+                parameters[key] = kwargs[key]
+        response = self.request('midas.community.create', parameters)
+        return response
+
     def get_community_by_name(self, name, token=None):
         """Get a community based on its name.
 
@@ -277,25 +309,57 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.community.get', parameters)
         return response
 
-    def create_folder(self, token, name, parent, **kwargs):
+    def get_community_children(self, community_id, token=None):
+        """Get the non-recursive children of the passed in community_id.
+
+        :param token: A valid token for the user in question.
+        :param community_id: The id of the requested community.
+        :returns: List of the folders in the community.
+        """
+        parameters = dict()
+        parameters['id'] = community_id
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.community.children', parameters)
+        return response
+
+    def list_communities(self, token=None):
+        """List all communities visible to a user.
+
+        :param token: (optional) A valid token for the user in question.
+        :returns: The list of communities.
+        """
+        parameters = dict()
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.community.list', parameters)
+        return response
+
+    def create_folder(self, token, name, parent_id, **kwargs):
         """Create a folder at the destination specified.
 
         :param token: A valid token for the user in question.
         :param name: The name of the folder to be created.
-        :param parent: The id of the targeted parent folder.
+        :param parent_id: The id of the targeted parent folder.
         :param description: (optional) The description text of the folder.
         :param uuid: (optional) The UUID for the folder. It will be generated if not given.
         :param privacy: (optional) The privacy state of the folder ('Public' or 'Private').
+        :param reuse_existing: (optional) If true, will just return the existing folder if there is one with the name
+        provided.
         :returns: Dictionary containing the details of the created folder.
         """
         parameters = dict()
         parameters['token'] = token
         parameters['name'] = name
-        parameters['parentid'] = parent
+        parameters['parentid'] = parent_id
         parameters['description'] = ''
-        optional_keys = ['description', 'uuid', 'privacy']
+        optional_keys = ['description', 'uuid', 'privacy', 'reuse_existing']
         for key in optional_keys:
             if key in kwargs:
+                if key == 'reuse_existing':
+                    if kwargs[key]:
+                        parameters['reuseExisting'] = kwargs[key]
+                    continue
                 parameters[key] = kwargs[key]
         response = self.request('midas.folder.create', parameters)
         return response
@@ -340,7 +404,7 @@ class CoreDriver(BaseDriver):
         return response
 
     def move_folder(self, token, folder_id, dest_folder_id):
-        """Move a folder to the desination folder.
+        """Move a folder to the destination folder.
 
         :param token: A valid token for the user in question.
         :param folder_id: The id of the folder to be moved.
@@ -354,12 +418,12 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.folder.move', parameters)
         return response
 
-    def create_item(self, token, name, parentid, **kwargs):
+    def create_item(self, token, name, parent_id, **kwargs):
         """Create an item to the server.
 
         :param token: A valid token for the user in question.
         :param name: The name of the item to be created.
-        :param parentid: The id of the destination folder.
+        :param parent_id: The id of the destination folder.
         :param description: (optional) The description text of the item.
         :param uuid: (optional) The UUID for the item. It will be generated if not given.
         :param privacy: (optional) The privacy state of the item ('Public' or 'Private').
@@ -368,7 +432,7 @@ class CoreDriver(BaseDriver):
         parameters = dict()
         parameters['token'] = token
         parameters['name'] = name
-        parameters['parentid'] = parentid
+        parameters['parentid'] = parent_id
         optional_keys = ['description', 'uuid', 'privacy']
         for key in optional_keys:
             if key in kwargs:
@@ -692,6 +756,27 @@ class ThumbnailCreatorDriver(BaseDriver):
         return response
 
 
+class SolrDriver(BaseDriver):
+    """Driver for the Midas solr module's api methods.
+    """
+
+    def solr_advanced_search(self, query, token=None, limit=20):
+        """Search item metadata using Apache Solr.
+
+        :param query: The Apache Lucene search query.
+        :param token: (optional) A valid token for the user in question.
+        :param limit: (optional) The limit of the search.
+        :returns: The list of items that match the search query.
+        """
+        parameters = dict()
+        parameters['query'] = query
+        parameters['limit'] = limit
+        if token:
+            parameters['token'] = token
+        response = self.request('midas.solr.search.advanced', parameters)
+        return response
+
+
 class TrackerDriver(BaseDriver):
     """Driver for the Midas tracker module's api methods.
     """
@@ -733,9 +818,9 @@ class TrackerDriver(BaseDriver):
         specific test dataset, pass its id here.
         :param truth_dataset_id: (optional) If this value pertains to a
         specific ground truth dataset, pass its id here.
-        :param silent: (optional) If set, do not perform threshold-based email
+        :param silent: (optional) If true, do not perform threshold-based email
         notifications for this scalar.
-        :param unofficial: (optional) If passed, creates an unofficial scalar
+        :param unofficial: (optional) If true, creates an unofficial scalar
         visible only to the user performing the submission.
         :returns: The scalar object that was created.
         """
@@ -760,6 +845,14 @@ class TrackerDriver(BaseDriver):
                 if key == 'truth_dataset_id':
                     parameters['truthDatasetId'] = kwargs[key]
                     continue
+                if key == 'silent':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
+                    continue
+                if key == 'unofficial':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
+                    continue
                 parameters[key] = kwargs[key]
         response = self.request('midas.tracker.scalar.add', parameters)
         return response
@@ -767,7 +860,7 @@ class TrackerDriver(BaseDriver):
     def upload_json_results(self, token, filepath, community_id,
                             producer_display_name, metric_name,
                             producer_revision, submit_time, **kwargs):
-        """Upload a json file containing numeric scoring results to be added
+        """Upload a JSON file containing numeric scoring results to be added
         as scalars. File is parsed and then deleted from the server.
 
         :param token: A valid token for the user in question.
@@ -787,9 +880,9 @@ class TrackerDriver(BaseDriver):
         :param parent_keys: (optional) Semicolon-separated list of parent keys
         to look for numeric results under. Use '.' to denote nesting, like in
         normal javascript syntax.
-        :param silent: (optional) If set, do not perform threshold-based email
+        :param silent: (optional) If true, do not perform threshold-based email
         notifications for this scalar.
-        :param unofficial: (optional) If passed, creates an unofficial scalar
+        :param unofficial: (optional) If true, creates an unofficial scalar
         visible only to the user performing the submission.
         :returns: The list of scalars that were created.
         """
@@ -815,6 +908,14 @@ class TrackerDriver(BaseDriver):
                     continue
                 if key == 'parent_keys':
                     parameters['parentKeys'] = kwargs[key]
+                    continue
+                if key == 'silent':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
+                    continue
+                if key == 'unofficial':
+                    if kwargs[key]:
+                        parameters[key] = kwargs[key]
                     continue
                 parameters[key] = kwargs[key]
         file_payload = open(filepath, 'rb')
