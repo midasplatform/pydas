@@ -24,8 +24,8 @@
 #
 ################################################################################
 
-"""This module is for the drivers that actually do the work of communication with
-the Midas server. Any drivers that are implemented should use the utility
+"""This module is for the drivers that actually do the work of communication
+with the Midas server. Any drivers that are implemented should use the utility
 functions provided in pydas.drivers.BaseDriver by inheriting from that class.
 """
 
@@ -92,9 +92,11 @@ class BaseDriver(object):
 
         If file_payload is specified, it will be PUT to the server.
 
-        :param method: String to be passed to the server indicating the desired method.
+        :param method: String to be passed to the server indicating the desired
+        method.
         :param parameters: (optional) Dictionary to pass in the HTTP body.
-        :param file_payload: (optional) File-like object to be sent with the HTTP request
+        :param file_payload: (optional) File-like object to be sent with the
+        HTTP request
         :returns: Dictionary representing the json response to the request.
         """
         method_url = self.full_url + method
@@ -121,7 +123,8 @@ class BaseDriver(object):
             response = json.loads(request.content)
         except ValueError:
             raise PydasException("Request failed with HTTP error code "
-                                 "%d and request.content %s" % (code, request.content))
+                                 "%d and request.content %s" %
+                                 (code, request.content))
 
         if response['stat'] != 'ok':
             exception = PydasException("Request failed with Midas error code "
@@ -140,7 +143,8 @@ class BaseDriver(object):
         :param cur_email: The email of the user.
         :param cur_apikey: A valid api-key assigned to the user.
         :param application: (optional) Application designated for this api key.
-        :returns: String of the token to be used for interaction with the api until expiration.
+        :returns: String of the token to be used for interaction with the api
+        until expiration.
         """
         parameters = dict()
         parameters['email'] = BaseDriver.email = cur_email  # Cache email
@@ -174,7 +178,8 @@ class CoreDriver(BaseDriver):
         The information provided includes enabled modules as well as enabled
         web api functions.
 
-        :returns: Dictionary of dictionaries containing module and web-api information.
+        :returns: Dictionary of dictionaries containing module and web-api
+        information.
         """
         response = self.request('midas.info')
         return response['version']
@@ -263,9 +268,12 @@ class CoreDriver(BaseDriver):
         :param token: A valid token for the user in question.
         :param name: The community name.
         :param description: (optional) The community description.
-        :param uuid: (optional) uuid of the community. If none is passed, will generate one.
-        :param privacy: (optional) Default 'Public', possible values [Public|Private].
-        :param can_join: (optional) Default 'Everyone', possible values [Everyone|Invitation].
+        :param uuid: (optional) uuid of the community. If none is passed, will
+        generate one.
+        :param privacy: (optional) Default 'Public', possible values
+        [Public|Private].
+        :param can_join: (optional) Default 'Everyone', possible values
+        [Everyone|Invitation].
         :returns: The community dao that was created.
         """
         parameters = dict()
@@ -342,9 +350,12 @@ class CoreDriver(BaseDriver):
         :param name: The name of the folder to be created.
         :param parent_id: The id of the targeted parent folder.
         :param description: (optional) The description text of the folder.
-        :param uuid: (optional) The UUID for the folder. It will be generated if not given.
-        :param privacy: (optional) The privacy state of the folder ('Public' or 'Private').
-        :param reuse_existing: (optional) If true, will just return the existing folder if there is one with the name
+        :param uuid: (optional) The UUID for the folder. It will be generated
+        if not given.
+        :param privacy: (optional) The privacy state of the folder
+        ('Public' or 'Private').
+        :param reuse_existing: (optional) If true, will just return the
+        existing folder if there is one with the name
         provided.
         :returns: Dictionary containing the details of the created folder.
         """
@@ -425,8 +436,10 @@ class CoreDriver(BaseDriver):
         :param name: The name of the item to be created.
         :param parent_id: The id of the destination folder.
         :param description: (optional) The description text of the item.
-        :param uuid: (optional) The UUID for the item. It will be generated if not given.
-        :param privacy: (optional) The privacy state of the item ('Public' or 'Private').
+        :param uuid: (optional) The UUID for the item. It will be generated if
+        not given.
+        :param privacy: (optional) The privacy state of the item
+        ('Public' or 'Private').
         :returns: Dictionary containing the details of the created item.
         """
         parameters = dict()
@@ -457,8 +470,10 @@ class CoreDriver(BaseDriver):
         """Download an item to disk.
 
         :param item_id: The id of the item to be downloaded.
-        :param token: (optional) The authentication token of the user requesting the download.
-        :param revision: (optional) The revision of the item to download, This defaults to HEAD.
+        :param token: (optional) The authentication token of the user
+        requesting the download.
+        :param revision: (optional) The revision of the item to download, this
+        defaults to HEAD.
         :returns: A tuple of the filename and the content iterator.
         """
         parameters = dict()
@@ -492,7 +507,8 @@ class CoreDriver(BaseDriver):
 
         :param item_id: The id of the item for which metadata will be returned
         :param token: (optional) A valid token for the user in question.
-        :param revision: (optional) Revision of the item. Defaults to latest revision.
+        :param revision: (optional) Revision of the item. Defaults to latest
+        revision.
         :returns: List of dictionaries containing item metadata.
         """
         parameters = dict()
@@ -511,7 +527,8 @@ class CoreDriver(BaseDriver):
         :param item_id: The id of the item for which metadata will be set.
         :param element: The metadata element name.
         :param value: The metadata value for the field.
-        :param qualifier: (optional) The metadata qualifier. Defaults to empty string.
+        :param qualifier: (optional) The metadata qualifier. Defaults to empty
+        string.
         :returns: None.
         """
         parameters = dict()
@@ -529,7 +546,8 @@ class CoreDriver(BaseDriver):
 
         :param token: A valid token for the user in question.
         :param item_id: The id of the item to be shared.
-        :param dest_folder_id: The id of destination folder where the item is shared to.
+        :param dest_folder_id: The id of destination folder where the item is
+        shared to.
         :returns: Dictionary containing the details of the shared item.
         """
         parameters = dict()
@@ -545,7 +563,8 @@ class CoreDriver(BaseDriver):
         :param token: A valid token for the user in question.
         :param item_id: The id of the item to be moved.
         :param src_folder_id: The id of source folder where the item is located.
-        :param dest_folder_id: The id of destination folder where the item is moved to.
+        :param dest_folder_id: The id of destination folder where the item is
+        moved to.
         :returns: Dictionary containing the details of the moved item.
         """
         parameters = dict()
@@ -654,7 +673,8 @@ class BatchmakeDriver(BaseDriver):
     """Driver for the Midas batchmake module's API methods.
     """
 
-    def add_condor_dag(self, token, batchmaketaskid, dagfilename, dagmanoutfilename):
+    def add_condor_dag(self, token, batchmaketaskid, dagfilename,
+                       dagmanoutfilename):
         """Adds a condor dag to the given batchmake task
         """
         parameters = dict()
@@ -665,9 +685,11 @@ class BatchmakeDriver(BaseDriver):
         response = self.request('midas.batchmake.add.condor.dag', parameters)
         return response
 
-    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename, outputfilename, errorfilename, logfilename,
+    def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename,
+                       outputfilename, errorfilename, logfilename,
                        postfilename):
-        """Adds a condor dag job to the condor dag associated with this batchmake task
+        """Adds a condor dag job to the condor dag associated with this
+        batchmake task
         """
         parameters = dict()
         parameters['token'] = token
@@ -702,8 +724,9 @@ class MultiFactorAuthenticationDriver(BaseDriver):
     def mfa_otp_login(self, temp_token, one_time_pass):
         """ Log in to get the real token using the temporary token and otp.
 
-        :param temp_token: The temporary token (or id) returned from normal login
-        :param one_time_pass: The one-time pass to be sent to the underlying multi-factor engine.
+        :param temp_token: The temporary token or id returned from normal login
+        :param one_time_pass: The one-time pass to be sent to the underlying
+        multi-factor engine.
         :returns: A standard token for interacting with the web api.
         """
         parameters = dict()
@@ -822,6 +845,8 @@ class TrackerDriver(BaseDriver):
         notifications for this scalar.
         :param unofficial: (optional) If true, creates an unofficial scalar
         visible only to the user performing the submission.
+        :param build_results_url: (optional) A URL for linking to build results
+        for this submission.
         :returns: The scalar object that was created.
         """
         parameters = dict()
@@ -832,28 +857,27 @@ class TrackerDriver(BaseDriver):
         parameters['producerRevision'] = producer_revision
         parameters['submitTime'] = submit_time
         parameters['value'] = value
-        optional_keys = ['config_item_id', 'test_dataset_id',
-                         'truth_dataset_id', 'silent', 'unofficial']
+        optional_keys = [
+            'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
+            'unofficial', 'build_results_url']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
                     parameters['configItemId'] = kwargs[key]
-                    continue
-                if key == 'test_dataset_id':
+                elif key == 'test_dataset_id':
                     parameters['testDatasetId'] = kwargs[key]
-                    continue
-                if key == 'truth_dataset_id':
+                elif key == 'truth_dataset_id':
                     parameters['truthDatasetId'] = kwargs[key]
-                    continue
-                if key == 'silent':
+                elif key == 'build_results_url':
+                    parameters['buildResultsUrl'] = kwargs[key]
+                elif key == 'silent':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
-                    continue
-                if key == 'unofficial':
+                elif key == 'unofficial':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
-                    continue
-                parameters[key] = kwargs[key]
+                else:
+                    parameters[key] = kwargs[key]
         response = self.request('midas.tracker.scalar.add', parameters)
         return response
 
@@ -893,31 +917,29 @@ class TrackerDriver(BaseDriver):
         parameters['metricName'] = metric_name
         parameters['producerRevision'] = producer_revision
         parameters['submitTime'] = submit_time
-        optional_keys = ['config_item_id', 'test_dataset_id',
-                         'truth_dataset_id', 'silent', 'unofficial']
+        optional_keys = [
+            'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
+            'unofficial', 'build_results_url']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
                     parameters['configItemId'] = kwargs[key]
-                    continue
-                if key == 'test_dataset_id':
+                elif key == 'test_dataset_id':
                     parameters['testDatasetId'] = kwargs[key]
-                    continue
-                if key == 'truth_dataset_id':
+                elif key == 'truth_dataset_id':
                     parameters['truthDatasetId'] = kwargs[key]
-                    continue
-                if key == 'parent_keys':
+                elif key == 'parent_keys':
                     parameters['parentKeys'] = kwargs[key]
-                    continue
-                if key == 'silent':
+                elif key == 'build_results_url':
+                    parameters['buildResultsUrl'] = kwargs[key]
+                elif key == 'silent':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
-                    continue
-                if key == 'unofficial':
+                elif key == 'unofficial':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
-                    continue
-                parameters[key] = kwargs[key]
+                else:
+                    parameters[key] = kwargs[key]
         file_payload = open(filepath, 'rb')
         response = self.request('midas.tracker.results.upload.json',
                                 parameters, file_payload)
