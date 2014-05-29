@@ -106,7 +106,7 @@ def version(versioner):
     setup = open('setup.py', 'r')
     for line in setup:
 
-        match = re.match('version = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
+        match = re.match('version=\'([0-9]*).([0-9]*).([0-9]*)\'', line)
         if match is not None:
             ver = {'major': match.group(1), 'minor': match.group(2), 'patch': match.group(3)}
             old_version = ver['major'] + "." + ver['minor'] + "." + ver['patch']
@@ -118,7 +118,7 @@ def version(versioner):
                 ver['patch'] = '0'
             new_version = ver['major'] + "." + ver['minor'] + "." + ver['patch']
 
-            line = "version = \'%s\'\n" % new_version
+            line = "version=\'%s\'\n" % new_version
 
         setup_lines.append(line)
     setup.close()
