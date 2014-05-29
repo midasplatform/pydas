@@ -24,6 +24,6 @@
 #
 ###############################################################################
 
-__version__ = '0.2.31'
+__version__ = '0.2.32'
 
 from pydas.api import login, upload, download, add_item_upload_callback
