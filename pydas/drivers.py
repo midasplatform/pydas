@@ -847,6 +847,8 @@ class TrackerDriver(BaseDriver):
         visible only to the user performing the submission.
         :param build_results_url: (optional) A URL for linking to build results
         for this submission.
+        :param branch: (optional) The branch name in the source repository for
+        this submission.
         :returns: The scalar object that was created.
         """
         parameters = dict()
@@ -859,7 +861,7 @@ class TrackerDriver(BaseDriver):
         parameters['value'] = value
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url']
+            'unofficial', 'build_results_url', 'branch']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -908,6 +910,10 @@ class TrackerDriver(BaseDriver):
         notifications for this scalar.
         :param unofficial: (optional) If true, creates an unofficial scalar
         visible only to the user performing the submission.
+        :param build_results_url: (optional) A URL for linking to build results
+        for this submission.
+        :param branch: (optional) The branch name in the source repository for
+        this submission.
         :returns: The list of scalars that were created.
         """
         parameters = dict()
@@ -919,7 +925,7 @@ class TrackerDriver(BaseDriver):
         parameters['submitTime'] = submit_time
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url']
+            'unofficial', 'build_results_url', 'branch']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
