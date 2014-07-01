@@ -51,7 +51,7 @@ Pydas can communicate with your server instance and that your server's web api p
 
 
 >>> import pydas
->>> core_driver = pydas.driver.CoreDriver('http://domain/midas3')
+>>> core_driver = pydas.drivers.CoreDriver('http://domain/midas3')
 >>> core_driver.get_server_version()
 '3.2.14'
 
