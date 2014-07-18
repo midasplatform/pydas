@@ -880,6 +880,13 @@ class TrackerDriver(BaseDriver):
         for this submission.
         :param branch: (optional) The branch name in the source repository for
         this submission.
+        :param params: (optional) Any key/value pairs that should be displayed
+        with this scalar result.
+        :type params: dict
+        :param extra_urls: (optional) Other URL's that should be displayed with
+        with this scalar result. Each element of the list should be a dict with
+        the following keys: label, text, href
+        :type extra_urls: list of dicts
         :returns: The scalar object that was created.
         """
         parameters = dict()
@@ -892,7 +899,7 @@ class TrackerDriver(BaseDriver):
         parameters['value'] = value
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url', 'branch']
+            'unofficial', 'build_results_url', 'branch', 'extra_urls', 'params']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -903,6 +910,10 @@ class TrackerDriver(BaseDriver):
                     parameters['truthDatasetId'] = kwargs[key]
                 elif key == 'build_results_url':
                     parameters['buildResultsUrl'] = kwargs[key]
+                elif key == 'extra_urls':
+                    parameters['extraUrls'] = json.dumps(kwargs[key])
+                elif key == 'params':
+                    parameters[key] = json.dumps(kwargs[key])
                 elif key == 'silent':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
@@ -945,6 +956,13 @@ class TrackerDriver(BaseDriver):
         for this submission.
         :param branch: (optional) The branch name in the source repository for
         this submission.
+        :param params: (optional) Any key/value pairs that should be displayed
+        with this scalar result.
+        :type params: dict
+        :param extra_urls: (optional) Other URL's that should be displayed with
+        with this scalar result. Each element of the list should be a dict with
+        the following keys: label, text, href
+        :type extra_urls: list of dicts
         :returns: The list of scalars that were created.
         """
         parameters = dict()
@@ -956,7 +974,7 @@ class TrackerDriver(BaseDriver):
         parameters['submitTime'] = submit_time
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url', 'branch']
+            'unofficial', 'build_results_url', 'branch', 'extra_urls', 'params']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -969,6 +987,10 @@ class TrackerDriver(BaseDriver):
                     parameters['parentKeys'] = kwargs[key]
                 elif key == 'build_results_url':
                     parameters['buildResultsUrl'] = kwargs[key]
+                elif key == 'extra_urls':
+                    parameters['extraUrls'] = json.dumps(kwargs[key])
+                elif key == 'params':
+                    parameters[key] = json.dumps(kwargs[key])
                 elif key == 'silent':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
