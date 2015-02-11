@@ -670,7 +670,7 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['itemid'] = item_id
         parameters['filename'] = filename
-        if not checksum is None:
+        if checksum is not None:
             parameters['checksum'] = checksum
         response = self.request('midas.upload.generatetoken', parameters)
         return response['token']
