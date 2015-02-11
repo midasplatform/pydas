@@ -675,15 +675,15 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.upload.generatetoken', parameters)
         return response['token']
 
-    def perform_upload(self, uploadtoken, filename, **kwargs):
+    def perform_upload(self, upload_token, filename, **kwargs):
         """Upload a file into a given item (or just to the public folder if the
         item is not specified.
 
-        :param uploadtoken: The upload token (returned by generate_upload_token)
+        :param upload_token: The upload token (returned by generate_upload_token)
         :param filename: The upload filename. Also used as the path to the file,
         if 'filepath' is not set.
         :param mode: (optional) Stream or multipart. Default is stream.
-        :param folderid: (optional) The id of the folder to upload into.
+        :param folder_id: (optional) The id of the folder to upload into.
         :param item_id: (optional) If set, will create a new revision in the
         existing item.
         :param revision: (optional) If set, will add a new file into an
@@ -694,7 +694,7 @@ class CoreDriver(BaseDriver):
         changed.
         """
         parameters = dict()
-        parameters['uploadtoken'] = uploadtoken
+        parameters['uploadtoken'] = upload_token
         parameters['filename'] = filename
         parameters['revision'] = 'head'
 
@@ -703,6 +703,9 @@ class CoreDriver(BaseDriver):
             if key in kwargs:
                 if key == 'item_id':
                     parameters['itemid'] = kwargs[key]
+                    continue
+                if key == 'folder_id':
+                    parameters['folderid'] = kwargs[key]
                     continue
                 parameters[key] = kwargs[key]
 
