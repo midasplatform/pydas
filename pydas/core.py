@@ -90,7 +90,7 @@ class Communicator(object):
         return all(driver.debug for driver in self.drivers)
 
     @debug.setter
-    def debug_set(self, value):
+    def debug(self, value):
         """Set the debug state on all of the drivers attached to the
         communicator.
         """

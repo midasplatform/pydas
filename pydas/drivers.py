@@ -77,8 +77,8 @@ class BaseDriver(object):
         return self._debug
 
     @debug.setter
-    def debug_set(self, value):
-        """Setter for debug state
+    def debug(self, value):
+        """Setter for debug state.
 
         :param value: The value to set the debug state
         """
