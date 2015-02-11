@@ -225,7 +225,7 @@ def _create_bitstream(filepath, local_file, item_id, log_ind=None):
             "bitstream from %s" % filepath
 
     if log_ind is not None:
-        log_trace = log_trace + log_ind
+        log_trace += log_ind
     print log_trace
 
 
