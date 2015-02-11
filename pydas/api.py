@@ -65,7 +65,7 @@ def login(email=None, password=None, api_key=None, application='Default',
 
     if api_key is None:
         if password is None:
-            password = getpass.getpass('Password: ')
+            password = getpass.getpass()
         session.api_key = session.communicator.get_default_api_key(
             session.email, password)
         session.application = 'Default'
