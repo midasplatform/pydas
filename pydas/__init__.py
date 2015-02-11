@@ -22,6 +22,8 @@
 #
 ###############################################################################
 
-__version__ = '0.2.36'
+"""Import high-level pydas functions."""
 
 from pydas.api import login, upload, download, add_item_upload_callback
+
+__version__ = '0.2.36'

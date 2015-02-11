@@ -22,19 +22,25 @@
 #
 ###############################################################################
 
-"""Module for the main user classes for pydas.
-"""
+"""Module for the main user classes for pydas."""
+
 import pydas.drivers
 import pydas.exceptions
 
 
 class Communicator(object):
-    """Class for communicating with the Midas server through its drivers.
-    """
+    """Class for communicating with the Midas API through its drivers."""
 
     def __init__(self, url, drivers=None):
-        """Constructor that takes a Midas url and an optional list of drivers
-        to use
+        """
+        Constructor. Takes the URL of the server and an optional list of
+        drivers to use.
+
+        :param url: URL of the server
+        :type url: string
+        :param drivers: (optional) list of drivers to be attached to this
+            communicator
+        :type drivers: None | list [T <= pydas.drivers.BaseDriver]
         """
         if drivers is None:
             self._drivers = []
@@ -44,7 +50,8 @@ class Communicator(object):
             for name, obj in inspect.getmembers(pydas.drivers):
                 if inspect.isclass(obj):
                     class_hierarchy = inspect.getmro(obj)
-                    if base_driver_class in class_hierarchy and obj != base_driver_class:
+                    if base_driver_class in class_hierarchy and \
+                            obj != base_driver_class:
                         instance = obj(url)
                         self._drivers.append(instance)
         else:
@@ -52,8 +59,12 @@ class Communicator(object):
         self._url = url
 
     def __getattr__(self, name):
-        """Called when a function does not exist in the class. We pass it down
+        """
+        Called when a function does not exist in the class. Pass the call down
         to one of the registered drivers.
+
+        :raises AttributeError: if there is no function with the given name in
+            any of the drivers
         """
         for driver in self.drivers:
             if hasattr(driver, name):
@@ -63,13 +74,21 @@ class Communicator(object):
 
     @property
     def drivers(self):
-        """Get the list of drivers
+        """
+        Get the list of drivers attached to this communicator.
+
+        :returns: list of drivers
+        :rtype: list[T <= pydas.drivers.BaseDriver]
         """
         return self._drivers
 
     @property
     def url(self):
-        """Getter for the url.
+        """
+        Return the URL of the server.
+
+        :returns: URL of the server
+        :rtype: string
         """
         if len(self.drivers) > 0:
             return self.drivers[0].url
@@ -78,37 +97,51 @@ class Communicator(object):
 
     @url.setter
     def url(self, value):
-        """Setter for the url.
+        """
+        Set the URL of the server in all drivers attached to this communicator.
+
+        :param value: URL of the server
+        :type value: string
         """
         for driver in self.drivers:
             driver.url = value
 
     @property
     def debug(self):
-        """Return the debug state of all drivers by logically and-ing them.
+        """
+        Return whether the debug state of every driver is True.
+
+        :returns: True if the debug state of every driver is True
+        :rtype: bool
         """
         return all(driver.debug for driver in self.drivers)
 
     @debug.setter
     def debug(self, value):
-        """Set the debug state on all of the drivers attached to the
-        communicator.
+        """
+        Set the debug state of all of drivers attached to this communicator.
+
+        :param value: debug state of all drivers
+        :type value: bool
         """
         for driver in self.drivers:
             driver.debug = value
 
     @property
     def verify_ssl_certificate(self):
-        """Return whether the SSL certificate will be verified.
+        """
+        Return whether the SSL certificate will be verified for all drivers
+        attached to this communicator.
 
-        :returns: True if the SSL certificate will be verified
+        :returns: True if the SSL certificate will be verified for every driver
         :rtype: bool
         """
         return all(driver.verify_ssl_certificate for driver in self.drivers)
 
     @verify_ssl_certificate.setter
     def verify_ssl_certificate(self, value):
-        """Set whether the SSL certificate will be verified.
+        """
+        Set whether the SSL certificate will be verified.
 
         :param value: If True, the SSL certificate will be verified
         :type value: bool
@@ -117,5 +150,11 @@ class Communicator(object):
             driver.verify_ssl_certificate = value
 
     def set_auth(self, value):
+        """
+        Set the authentication in all drivers attached to this communicator.
+
+        :param value: authentication tuple to be passed to requests.request()
+        :type value: None | tuple
+        """
         for driver in self.drivers:
             driver.auth = value

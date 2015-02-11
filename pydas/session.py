@@ -22,6 +22,8 @@
 #
 ###############################################################################
 
+"""Global variables to the session."""
+
 communicator = None
 email = None
 api_key = None

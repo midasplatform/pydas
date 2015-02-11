@@ -16,7 +16,7 @@ Requirements
 
 * A working `Midas3 <http://www.midasplatform.org>`_ server instance
 
-* An `enabled <http://www.kitware.com/midaswiki/index.php/Documentation/Latest/User/Administration/ManagePlugins>`_  web api plugin for your Midas3 instance
+* An `enabled <http://www.kitware.com/midaswiki/index.php/Documentation/Latest/User/Administration/ManagePlugins>`_  web API plugin for your Midas 3 instance
 
 * `Python <http://www.python.org/>`_ version 2.6 or later
 
@@ -47,7 +47,7 @@ Checking your Installation
 '0.2.36'
 
 You can check the version of your Midas3 server via Pydas, which will ensure that
-Pydas can communicate with your server instance and that your server's web api plugin is active.
+Pydas can communicate with your server instance and that your server's web API plugin is active.
 
 
 >>> import pydas
