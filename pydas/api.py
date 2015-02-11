@@ -36,8 +36,7 @@ import session
 
 
 def login(email=None, password=None, api_key=None, application='Default',
-          url=None):
-    """Do the legwork of logging into Midas, storing the api_key and token
+          url=None, verify_ssl_certificate=True):
     """Do the legwork of logging into Midas, storing the API key and token.
 
     :param email: (optional) Email address to login with. If not set, the
@@ -49,6 +48,9 @@ def login(email=None, password=None, api_key=None, application='Default',
     :param application: (optional) Application name to be used with 'api_key'.
     :param url: (optional) URL address of the Midas server to login to. If not
     set, the console will be prompted.
+    :param verify_ssl_certificate: If True, the SSL certificate will be
+    verified
+    :type verify_ssl_certificate: bool
     :returns: API token.
     """
     if url is None:
@@ -58,6 +60,8 @@ def login(email=None, password=None, api_key=None, application='Default',
         session.communicator = Communicator(url)
     else:
         session.communicator.url = url
+
+    session.communicator.verify_ssl_certificate = verify_ssl_certificate
 
     if email is None:
         email = raw_input('Email: ')

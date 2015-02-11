@@ -31,6 +31,7 @@ import json
 import os
 
 import requests as http
+from requests.exceptions import SSLError
 
 from pydas.exceptions import PydasException
 import pydas.retry as retry
@@ -50,6 +51,7 @@ class BaseDriver(object):
         self._api_suffix = '/api/json?method='
         self._url = url
         self._debug = False
+        self._verify_ssl_certificate = True
         self.auth = None
 
     @property
@@ -84,6 +86,24 @@ class BaseDriver(object):
         """
         self._debug = value
 
+    @property
+    def verify_ssl_certificate(self):
+        """Return whether the SSL certificate will be verified.
+
+        :returns: True if the SSL certificate will be verified
+        :rtype: bool
+        """
+        return self._verify_ssl_certificate
+
+    @verify_ssl_certificate.setter
+    def verify_ssl_certificate(self, value):
+        """Set whether the SSL certificate will be verified.
+
+        :param value: If True, the SSL certificate will be verified
+        :type value: bool
+        """
+        self._verify_ssl_certificate = value
+
     @retry.reauth
     def request(self, method, parameters=None, file_payload=None):
         """Do the generic processing of a request to the server.
@@ -98,37 +118,44 @@ class BaseDriver(object):
         :returns: Dictionary representing the json response to the request.
         """
         method_url = self.full_url + method
-        if file_payload:
-            request = http.put(method_url,
-                               data=file_payload.read(),
-                               params=parameters,
-                               allow_redirects=True,
-                               verify=False,
-                               auth=self.auth)
-        else:
-            request = http.post(method_url,
-                                params=parameters,
-                                allow_redirects=True,
-                                verify=False,
-                                auth=self.auth)
+
+        try:
+            if file_payload:
+                request = http.put(method_url,
+                                   data=file_payload.read(),
+                                   params=parameters,
+                                   allow_redirects=True,
+                                   verify=self._verify_ssl_certificate,
+                                   auth=self.auth)
+            else:
+                request = http.post(method_url,
+                                    params=parameters,
+                                    allow_redirects=True,
+                                    verify=self._verify_ssl_certificate,
+                                    auth=self.auth)
+        except SSLError:
+            raise PydasException('Request failed with SSL verification error')
+
         code = request.status_code
         if self._debug:
             print request.content
         if code != 200 and code != 302:
-            raise PydasException("Request failed with HTTP error code "
-                                 "%d" % code)
+            raise PydasException('Request failed with HTTP error code {}'
+                                 .format(code))
+
         try:
             response = json.loads(request.content)
         except ValueError:
-            raise PydasException("Request failed with HTTP error code "
-                                 "%d and request.content %s" %
-                                 (code, request.content))
+            raise PydasException('Request failed with HTTP error code {} '
+                                 'and request content {}'
+                                 .format(code, request.content))
 
         if response['stat'] != 'ok':
-            exception = PydasException("Request failed with Midas error code "
-                                       "%s: %s" % (response['code'],
-                                                   response['message']))
-            exception.code = response['code']
+            code = response['code']
+            exception = PydasException('Request failed with Midas Server '
+                                       'error code {}: {}'
+                                       .format(code, response['message']))
+            exception.code = code
             exception.method = method
             raise exception
         return response['data']

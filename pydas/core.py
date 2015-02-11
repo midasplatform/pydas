@@ -97,6 +97,25 @@ class Communicator(object):
         for driver in self.drivers:
             driver.debug = value
 
+    @property
+    def verify_ssl_certificate(self):
+        """Return whether the SSL certificate will be verified.
+
+        :returns: True if the SSL certificate will be verified
+        :rtype: bool
+        """
+        return all(driver.verify_ssl_certificate for driver in self.drivers)
+
+    @verify_ssl_certificate.setter
+    def verify_ssl_certificate(self, value):
+        """Set whether the SSL certificate will be verified.
+
+        :param value: If True, the SSL certificate will be verified
+        :type value: bool
+        """
+        for driver in self.drivers:
+            driver.verify_ssl_certificate = value
+
     def set_auth(self, value):
         for driver in self.drivers:
             driver.auth = value
