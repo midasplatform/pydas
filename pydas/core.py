@@ -85,7 +85,7 @@ class Communicator(object):
 
     @property
     def debug(self):
-        """Return the debug state of all drivers by logically anding them.
+        """Return the debug state of all drivers by logically and-ing them.
         """
         return all(driver.debug for driver in self.drivers)
 

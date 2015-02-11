@@ -38,6 +38,7 @@ import session
 def login(email=None, password=None, api_key=None, application='Default',
           url=None):
     """Do the legwork of logging into Midas, storing the api_key and token
+    """Do the legwork of logging into Midas, storing the API key and token.
 
     :param email: (optional) Email address to login with. If not set, the
     console will be prompted.

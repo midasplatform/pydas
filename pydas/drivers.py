@@ -72,7 +72,7 @@ class BaseDriver(object):
 
     @property
     def debug(self):
-        """Return the debug state of the driver
+        """Return the debug state of the driver.
         """
         return self._debug
 
@@ -556,7 +556,7 @@ class CoreDriver(BaseDriver):
         return response
 
     def move_item(self, token, item_id, src_folder_id, dest_folder_id):
-        """Move an item from the source folder to the desination folder.
+        """Move an item from the source folder to the destination folder.
 
         :param token: A valid token for the user in question.
         :param item_id: The id of the item to be moved.
