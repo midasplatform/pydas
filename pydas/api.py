@@ -59,8 +59,13 @@ def login(email=None, password=None, api_key=None, application='Default',
     :returns: API token.
     :rtype: string
     """
+    try:
+        input_ = raw_input
+    except NameError:
+        input_ = input
+
     if url is None:
-        url = raw_input('Server URL: ')
+        url = input_('Server URL: ')
     url = url.rstrip('/')
     if session.communicator is None:
         session.communicator = Communicator(url)
@@ -70,7 +75,7 @@ def login(email=None, password=None, api_key=None, application='Default',
     session.communicator.verify_ssl_certificate = verify_ssl_certificate
 
     if email is None:
-        email = raw_input('Email: ')
+        email = input_('Email: ')
     session.email = email
 
     if api_key is None:
