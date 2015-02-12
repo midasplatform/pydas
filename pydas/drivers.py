@@ -20,7 +20,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-################################################################################
+###############################################################################
 
 """
 This module is for the drivers that actually do the work of communication
@@ -167,38 +167,37 @@ class BaseDriver(object):
 
         code = request.status_code
         if self._debug:
-            print request.content
+            print(request.content)
         if code != 200 and code != 302:
-            raise PydasException('Request failed with HTTP error code {}'
+            raise PydasException('Request failed with HTTP error code {0}'
                                  .format(code))
 
         try:
             response = json.loads(request.content)
         except ValueError:
-            raise PydasException('Request failed with HTTP error code {} '
-                                 'and request content {}'
+            raise PydasException('Request failed with HTTP error code {0} '
+                                 'and request content {1}'
                                  .format(code, request.content))
 
         if response['stat'] != 'ok':
             code = response['code']
             exception = PydasException('Request failed with Midas Server '
-                                       'error code {}: {}'
+                                       'error code {0}: {1}'
                                        .format(code, response['message']))
             exception.code = code
             exception.method = method
             raise exception
         return response['data']
 
-    def login_with_api_key(self, cur_email, cur_apikey, application='Default'):
+    def login_with_api_key(self, email, api_key, application='Default'):
         """
-        Login and get a token.
+        Login and get a token. If you do not specify a specific application,
+        'Default' will be used.
 
-        If you do not specify a specific application, 'Default' will be used.
-
-        :param cur_email: Email address of the user
-        :type cur_email: string
-        :param cur_apikey: API key assigned to the user
-        :type cur_apikey: string
+        :param email: Email address of the user
+        :type email: string
+        :param api_key: API key assigned to the user
+        :type api_key: string
         :param application: (optional) Application designated for this API key
         :type application: string
         :returns: Token to be used for interaction with the API until
@@ -206,8 +205,8 @@ class BaseDriver(object):
         :rtype: string
         """
         parameters = dict()
-        parameters['email'] = BaseDriver.email = cur_email  # Cache email
-        parameters['apikey'] = BaseDriver.apikey = cur_apikey  # Cache API key
+        parameters['email'] = BaseDriver.email = email  # Cache email
+        parameters['apikey'] = BaseDriver.apikey = api_key  # Cache API key
         parameters['appname'] = application
         response = self.request('midas.login', parameters)
         if 'token' in response:  # normal case
@@ -810,7 +809,8 @@ class CoreDriver(BaseDriver):
         parameters['folderName'] = folder_name
         if token:
             parameters['token'] = token
-        response = self.request('midas.item.searchbynameandfoldername', parameters)
+        response = self.request('midas.item.searchbynameandfoldername',
+                                parameters)
         return response['items']
 
     def create_link(self, token, folder_id, url, **kwargs):
@@ -901,7 +901,7 @@ class CoreDriver(BaseDriver):
             existing item.
         :type item_id: int | long
         :param revision: (optional) If set, will add a new file into an
-            existing revision. Set this to "head" to add to the most recent
+            existing revision. Set this to 'head' to add to the most recent
             revision.
         :type revision: string | int | long
         :param filepath: (optional) The path to the file.
@@ -1110,8 +1110,8 @@ class ThumbnailCreatorDriver(BaseDriver):
         parameters = dict()
         parameters['token'] = token
         parameters['itemId'] = item_id
-        response = self.request('midas.thumbnailcreator.create.small.thumbnail',
-                                parameters)
+        response = self.request(
+            'midas.thumbnailcreator.create.small.thumbnail', parameters)
         return response
 
 
@@ -1228,7 +1228,8 @@ class TrackerDriver(BaseDriver):
         parameters['value'] = value
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url', 'branch', 'extra_urls', 'params']
+            'unofficial', 'build_results_url', 'branch', 'extra_urls',
+            'params']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -1304,7 +1305,8 @@ class TrackerDriver(BaseDriver):
         parameters['submitTime'] = submit_time
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url', 'branch', 'extra_urls', 'params']
+            'unofficial', 'build_results_url', 'branch', 'extra_urls',
+            'params']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':

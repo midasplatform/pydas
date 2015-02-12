@@ -69,8 +69,8 @@ class Communicator(object):
         for driver in self.drivers:
             if hasattr(driver, name):
                 return getattr(driver, name)
-        raise AttributeError("%r object has no attribute %r" %
-                             (type(self).__name__, name))
+        raise AttributeError('{0} object has no attribute {1}'
+                             .format(type(self).__name__, name))
 
     @property
     def drivers(self):

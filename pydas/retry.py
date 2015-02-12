@@ -44,7 +44,7 @@ def reauth(fn):
             ret_val = fn(*args, **kw)
             return ret_val
         except pydas.exceptions.PydasException as detail:
-            print "Caught PydasException: ", detail
+            print('Caught PydasException: {0}'.format(detail))
             # Unable to authenticate using the given credentials.
             if 'Login failed' in detail.value:
                 print('Login failed')
@@ -52,13 +52,13 @@ def reauth(fn):
             elif '404' in detail.value:
                 print('404 from Server')
                 raise
-            print "Waiting 5 seconds, then retrying request"
+            print('Waiting 5 seconds, then retrying request')
 
             # wait 30 seconds before retrying
             time.sleep(5)
 
             # renew the token. get the instance of the CoreDriver and set it
-            # as "that"
+            # as 'that'
             that = args[0]
             session.token = that.login_with_api_key(that.__class__.email,
                                                     that.__class__.apikey)
@@ -67,9 +67,9 @@ def reauth(fn):
                 # True if MFA is enabled
                 if len(session.token) < 10:
                     one_time_pass = getpass.getpass('One-Time Password: ')
-                    session.token = session.communicator.mfa_otp_login(session.token,
-                                                                       one_time_pass)
-            print session.token
+                    session.token = session.communicator.mfa_otp_login(
+                        session.token, one_time_pass)
+            print(session.token)
 
             # now fix up the arguments of the original call to use the renewed
             # token

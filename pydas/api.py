@@ -246,19 +246,19 @@ def _create_bitstream(file_path, local_file, item_id, log_ind=None):
     upload_token = session.communicator.generate_upload_token(
         session.token, item_id, local_file, checksum)
 
-    if upload_token != "":
-        log_trace = "Uploading Bitstream from %s" % file_path
+    if upload_token != '':
+        log_trace = 'Uploading bitstream from {0}'.format(file_path)
         # only need to perform the upload if we haven't uploaded before
         # in this cae, the upload token would not be empty
         session.communicator.perform_upload(
             upload_token, local_file, filepath=file_path, itemid=item_id)
     else:
-        log_trace = "Adding a bitstream link in this item to an existing" \
-            "bitstream from %s" % file_path
+        log_trace = 'Adding a bitstream link in this item to an existing ' \
+                    'bitstream from {0}'.format(file_path)
 
     if log_ind is not None:
         log_trace += log_ind
-    print log_trace
+    print(log_trace)
 
 
 def _upload_as_item(local_file, parent_folder_id, file_path,
@@ -323,13 +323,13 @@ def _upload_folder_recursive(local_folder,
     :type reuse_existing: bool
     """
     if leaf_folders_as_items and _has_only_files(local_folder):
-        print 'Creating Item from %s' % local_folder
+        print('Creating item from {0}'.format(local_folder))
         _upload_folder_as_item(local_folder, parent_folder_id, reuse_existing)
         return
     else:
         # do not need to check if folder exists, if it does, an attempt to
         # create it will just return the existing id
-        print 'Creating Folder from %s' % local_folder
+        print('Creating folder from {0}'.format(local_folder))
         new_folder_id = _create_or_reuse_folder(local_folder, parent_folder_id,
                                                 reuse_existing)
 
@@ -344,7 +344,7 @@ def _upload_folder_recursive(local_folder,
                                          leaf_folders_as_items,
                                          reuse_existing)
             else:
-                print 'Uploading Item from %s' % full_entry
+                print('Uploading item from {0}'.format(full_entry))
                 _upload_as_item(entry,
                                 new_folder_id,
                                 full_entry,
@@ -388,7 +388,7 @@ def _upload_folder_as_item(local_folder, parent_folder_id,
     filecount = len(subdir_contents)
     for (ind, current_file) in enumerate(subdir_contents):
         file_path = os.path.join(local_folder, current_file)
-        log_ind = "(%d of %d)" % (ind + 1, filecount)
+        log_ind = '({0} of {1})'.format(ind + 1, filecount)
         _create_bitstream(file_path, current_file, item_id, log_ind)
 
     for callback in session.item_upload_callbacks:
@@ -426,14 +426,14 @@ def upload(file_pattern, destination='Private', leaf_folders_as_items=False,
             if cur_folder['name'] == destination:
                 parent_folder_id = cur_folder['folder_id']
     if parent_folder_id is None:
-        print 'Unable to locate specified destination. ',
-        print 'Defaulting to %s' % user_folders[0]['name']
+        print('Unable to locate specified destination. Defaulting to {0}.'
+              .format(user_folders[0]['name']))
         parent_folder_id = user_folders[0]['folder_id']
 
     for current_file in glob.iglob(file_pattern):
         current_file = os.path.normpath(current_file)
         if os.path.isfile(current_file):
-            print 'Uploading Item from %s' % current_file
+            print('Uploading item from {0}'.format(current_file))
             _upload_as_item(os.path.basename(current_file),
                             parent_folder_id,
                             current_file,
@@ -562,7 +562,7 @@ def _download_folder_recursive(folder_id, path='.'):
 
     cur_folder = session.communicator.folder_get(session.token, folder_id)
     folder_path = os.path.join(path, cur_folder['name'])
-    print 'Creating Folder at %s' % folder_path
+    print('Creating folder at {0}'.format(folder_path))
     os.mkdir(folder_path)
     cur_children = session.communicator.folder_children(
         session.token, folder_id)
@@ -586,7 +586,7 @@ def _download_item(item_id, path='.'):
     filename, content_iter = session.communicator.download_item(
         item_id, session.token)
     item_path = os.path.join(path, filename)
-    print 'Creating File at %s' % item_path
+    print('Creating file at {0}'.format(item_path))
     out_file = open(item_path, 'wb')
     for block in content_iter:
         out_file.write(block)
@@ -607,7 +607,7 @@ def download(server_path, local_path='.'):
 
     is_item, resource_id = _find_resource_id_from_path(server_path)
     if resource_id == -1:
-        print 'Unable to Locate %s' % server_path
+        print('Unable to locate {0}'.format(server_path))
     else:
         if is_item:
             _download_item(resource_id, local_path)
