@@ -40,7 +40,7 @@ Checking your Installation
 
 >>> import pydas
 >>> pydas.version
-'0.2.36'
+'0.2.37'
 
 You can check the version of your Midas 3 server via Pydas, which will ensure that
 Pydas can communicate with your server instance and that your server's web API plugin is active.
