@@ -14,7 +14,7 @@ Login to your Midas instance
 >>> pydas.login()
 Server URL: http://domain/midas3
 Email: email@email.com
-Password: PASSWORD 
+Password: PASSWORD
 'FK0uEYfciJcjBbaAadfTC123213s12810Favf0PJPULX'
 
 For reference, this last string is your session token, but you will probably not need to use it.
@@ -43,7 +43,7 @@ This upload method will upload recursively, so if you have subdirectories under 
 Upload example treating leaf folders as items
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's say you have some folders with only files in them (call them leaf folders), and you want each of the leaf folders to have all files in them uploaded to the same item. 
+Let's say you have some folders with only files in them (call them leaf folders), and you want each of the leaf folders to have all files in them uploaded to the same item.
 
 Here we have a top level folder folders_as_items, which has two subfolders.  Each of the subfolders has two files::
 

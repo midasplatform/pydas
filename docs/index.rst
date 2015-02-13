@@ -1,5 +1,5 @@
 .. pydas documentation master file, created by
-   sphinx-quickstart on Mon Mar 17 12:00:00 2014.
+   sphinx-quickstart on Fri Feb 13 10:49:07 2015.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
 
    intro
-   quickstart 
+   quickstart
 
 .. automodule:: pydas
    :members:
@@ -20,7 +20,6 @@ Contents:
    :members:
 .. automodule:: pydas.drivers
    :members:
-
 
 Indices and tables
 ==================
