@@ -3,7 +3,11 @@ pydas
 
 .. image:: https://img.shields.io/travis/midasplatform/pydas.svg
     :target: https://travis-ci.org/midasplatform/pydas
-    :alt: Build Status
+    :alt: Linux Build Status
+
+.. image:: https://img.shields.io/appveyor/ci/midasplatform/pydas.svg
+    :target: https://ci.appveyor.com/project/midasplatform/pydas
+    :alt: Windows Build Status
 
 .. image:: https://readthedocs.org/projects/pydas/badge?version=latest
     :target: http://pydas.readthedocs.org/

@@ -1,0 +1,16 @@
+---
+version: 1.0.{build}-{branch}
+
+install:
+  - set PATH=C:\Python27;C:\Python27\Scripts;%PATH%
+  - ps: (New-Object System.Net.WebClient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'get-pip.py'))
+  - python get-pip.py
+  - pip install -r requirements.txt -r requirements-dev.txt
+  - pip install .
+
+build: off
+
+test_script:
+  - flake8 pydas
+
+deploy: off
