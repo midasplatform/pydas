@@ -1,18 +1,26 @@
 pydas
 =====
 
-.. image:: https://badge.fury.io/py/pydas.png
-    :target: http://badge.fury.io/py/pydas
+.. image:: https://img.shields.io/travis/midasplatform/pydas.svg
+    :target: https://travis-ci.org/midasplatform/pydas
+    :alt: Build Status
+
+.. image:: https://readthedocs.org/projects/pydas/badge?version=latest
+    :target: http://pydas.readthedocs.org/
+    :alt: Documentation
+
+.. image:: https://img.shields.io/pypi/v/pydas.svg
+    :target: https://pypi.python.org/pypi/pydas/
     :alt: PyPI Package Version
 
-.. image:: https://pypip.in/d/pydas/badge.png
+.. image:: https://img.shields.io/pypi/dw/pydas.svg
     :target: https://pypi.python.org/pypi/pydas/
     :alt: Downloads
 
-.. image:: https://pypip.in/license/pydas/badge.png
+.. image:: https://img.shields.io/pypi/l/pydas.svg
     :target: https://pypi.python.org/pypi/pydas/
     :alt: License
 
-Upload data to a `Midas`_-based application with Python.
+Upload data to a `Midas Server`_ application with Python.
 
-.. _`Midas`: http://www.midasplatform.org/
+.. _`Midas Server`: http://www.midasplatform.org/
