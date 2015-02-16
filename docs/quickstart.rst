@@ -1,14 +1,14 @@
-Pydas Quickstart
-================
+pydas Quick Start
+=================
 
 
 Module level method examples
 ----------------------------
 
-The easiest way to use Pydas is by using high level module level methods.
+The easiest way to use pydas is by using high level module level methods.
 
-Login to your Midas instance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Login to your Midas Server instance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 >>> import pydas
 >>> pydas.login()
@@ -28,16 +28,16 @@ Let's say you have a subdirectory under your current location called myfiles, wi
         file1.txt
         file2.txt
 
-After we have logged in to Pydas, we want to upload this directory to our Midas3 instance.
+After we have logged in to pydas, we want to upload this directory to our Midas Server 3 instance.
 
 >>> pydas.upload('myfiles')
 Creating Folder from myfiles
 Uploading Item from myfiles/file1.txt
 Uploading Item from myfiles/file2.txt
 
-By default, this will create a folder under your Midas3 user's private folder called myfiles, with 2 items, one for each of the files.
+By default, this will create a folder under your Midas Server 3 user's private folder called myfiles, with 2 items, one for each of the files.
 
-This upload method will upload recursively, so if you have subdirectories under your uploaded directory, they will have corresponding folders created in Midas to mirror the directory structure in your local machine.
+This upload method will upload recursively, so if you have subdirectories under your uploaded directory, they will have corresponding folders created on the Midas Server to mirror the directory structure in your local machine.
 
 
 Upload example treating leaf folders as items
@@ -64,7 +64,7 @@ Creating Item from folders_as_items/item2.
 Uploading Bitstream from folders_as_items/item2/bitstream2_1.txt (1 of 2)
 Uploading Bitstream from folders_as_items/item2/bitstream2_2.txt (2 of 2)
 
-This upload will create a folder in your Midas private folder called folders_as_items, and in that folder will create two items, item1 and item2.  item1 will have 2 bitstreams, and item2 will have two bitstreams, corresponding to the files that are in each of the leaf folders.
+This upload will create a folder in your Midas Server private folder called folders_as_items, and in that folder will create two items, item1 and item2.  item1 will have 2 bitstreams, and item2 will have two bitstreams, corresponding to the files that are in each of the leaf folders.
 
 
 Upload example for DICOM data

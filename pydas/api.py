@@ -37,7 +37,8 @@ import session
 def login(email=None, password=None, api_key=None, application='Default',
           url=None, verify_ssl_certificate=True):
     """
-    Do the legwork of logging into Midas, storing the API key and token.
+    Do the legwork of logging into the Midas Server instance, storing the API
+    key and token.
 
     :param email: (optional) Email address to login with. If not set, the
         console will be prompted.
@@ -50,8 +51,8 @@ def login(email=None, password=None, api_key=None, application='Default',
     :type api_key: None | string
     :param application: (optional) Application name to be used with 'api_key'.
     :type application: string
-    :param url: (optional) URL address of the Midas server to login to. If not
-        set, the console will be prompted.
+    :param url: (optional) URL address of the Midas Server instance to login
+        to. If not set, the console will be prompted.
     :type url: None | string
     :param verify_ssl_certificate: (optional) If True, the SSL certificate will
         be verified
@@ -93,7 +94,8 @@ def login(email=None, password=None, api_key=None, application='Default',
 
 def renew_token():
     """
-    Renew or get a token to use for transactions with Midas.
+    Renew or get a token to use for transactions with the Midas Server
+    instance.
 
     :returns: API token.
     :rtype: string
@@ -139,13 +141,13 @@ def add_item_upload_callback(callback):
 
 def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
     """
-    Create an item from the local file in the midas folder corresponding to
-    the parent folder id.
+    Create an item from the local file in the Midas Server folder corresponding
+    to the parent folder id.
 
     :param local_file: full path to a file on the local file system
     :type local_file: string
-    :param parent_folder_id: id of parent folder in Midas, where the item will
-        be added
+    :param parent_folder_id: id of parent folder on the Midas Server instance,
+        where the item will be added
     :type parent_folder_id: int | long
     :param reuse_existing: (optional) whether to accept an existing item of the
         same name in the same location, or create a new one instead
@@ -181,8 +183,8 @@ def _create_or_reuse_folder(local_folder, parent_folder_id,
 
     :param local_folder: full path to a directory on the local file system
     :type local_folder: string
-    :param parent_folder_id: id of parent folder in Midas, where the folder
-        will be added
+    :param parent_folder_id: id of parent folder on the Midas Server instance,
+        where the folder will be added
     :type parent_folder_id: int | long
     :param reuse_existing: (optional) whether to accept an existing folder of
        the same name in the same location, or create a new one instead
@@ -269,8 +271,8 @@ def _upload_as_item(local_file, parent_folder_id, file_path,
 
     :param local_file: name of local file to upload
     :type local_file: string
-    :param parent_folder_id: id of parent folder in Midas, where the item will
-        be added
+    :param parent_folder_id: id of parent folder on the Midas Server instance,
+        where the item will be added
     :type parent_folder_id: int | long
     :param file_path: full path to the file
     :type file_path: string
@@ -292,8 +294,8 @@ def _create_folder(local_folder, parent_folder_id):
 
     :param local_folder: full path to a local folder
     :type local_folder: string
-    :param parent_folder_id: id of parent folder in Midas, where the new folder
-        will be added
+    :param parent_folder_id: id of parent folder on the Midas Server instance,
+        where the new folder will be added
     :type parent_folder_id: int | long
     :returns: id of the remote folder that was created
     :rtype: int | long
@@ -312,8 +314,8 @@ def _upload_folder_recursive(local_folder,
 
     :param local_folder: full path to local folder to be uploaded
     :type local_folder: string
-    :param parent_folder_id: id of parent folder in Midas, where the new folder
-        will be added
+    :param parent_folder_id: id of parent folder on the Midas Server instance,
+        where the new folder will be added
     :type parent_folder_id: int | long
     :param leaf_folders_as_items: (optional) whether leaf folders should have
         all files uploaded as single items
@@ -595,7 +597,7 @@ def _download_item(item_id, path='.'):
 
 def download(server_path, local_path='.'):
     """
-    Recursively download a file or item from Midas.
+    Recursively download a file or item from the Midas Server instance.
 
     :param server_path: The location on the server to find the resource to
         download

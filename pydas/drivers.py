@@ -24,8 +24,9 @@
 
 """
 This module is for the drivers that actually do the work of communication
-with the Midas server. Any drivers that are implemented should use the utility
-functions provided in pydas.drivers.BaseDriver by inheriting from that class.
+with the Midas Server instance. Any drivers that are implemented should use the
+utility functions provided in pydas.drivers.BaseDriver by inheriting from that
+class.
 """
 
 import json
@@ -39,7 +40,7 @@ import pydas.retry as retry
 
 
 class BaseDriver(object):
-    """Base class for the Midas API drivers."""
+    """Base class for the Midas Server API drivers."""
 
     # Class members.
     email = ''
@@ -217,9 +218,9 @@ class BaseDriver(object):
 
 class CoreDriver(BaseDriver):
     """
-    Driver for the core API methods of Midas. This contains all of the calls
-    necessary to interact with a Midas instance that has no plugins enabled
-    (other than the web API).
+    Driver for the core API methods of Midas Server. This contains all of the
+    calls necessary to interact with a Midas Server instance that has no
+    plugins enabled (other than the web API).
     """
 
     def get_server_version(self):
@@ -857,9 +858,10 @@ class CoreDriver(BaseDriver):
         """
         Generate a token to use for upload.
 
-        Midas uses a individual token for each upload. The token corresponds to
-        the file specified and that file only. Passing the MD5 checksum allows
-        the server to determine if the file is already in the asset store.
+        Midas Server uses a individual token for each upload. The token
+        corresponds to the file specified and that file only. Passing the MD5
+        checksum allows the server to determine if the file is already in the
+        asset store.
 
         :param token: A valid token for the user in question.
         :type token: string
@@ -957,7 +959,7 @@ class CoreDriver(BaseDriver):
 
 
 class BatchmakeDriver(BaseDriver):
-    """Driver for the Midas batchmake module's API methods."""
+    """Driver for the batchmake module API methods."""
 
     def add_condor_dag(self, token, batchmaketaskid, dagfilename,
                        dagmanoutfilename):
@@ -1021,7 +1023,7 @@ class BatchmakeDriver(BaseDriver):
 
 
 class DicomextractorDriver(BaseDriver):
-    """Driver for the Midas dicomextractor module's API methods."""
+    """Driver for the dicomextractor module API methods."""
 
     def extract_dicommetadata(self, token, item_id):
         """
@@ -1042,7 +1044,7 @@ class DicomextractorDriver(BaseDriver):
 
 
 class MultiFactorAuthenticationDriver(BaseDriver):
-    """Driver for the multi-factor authentication module's API methods."""
+    """Driver for the multi-factor authentication module API methods."""
 
     def mfa_otp_login(self, temp_token, one_time_pass):
         """
@@ -1064,7 +1066,7 @@ class MultiFactorAuthenticationDriver(BaseDriver):
 
 
 class ThumbnailCreatorDriver(BaseDriver):
-    """Driver for the Midas thumbnailcreator module's API methods."""
+    """Driver for the thumbnailcreator module API methods."""
 
     def create_big_thumbnail(self, token, bitstream_id, item_id, width=575):
         """
@@ -1116,7 +1118,7 @@ class ThumbnailCreatorDriver(BaseDriver):
 
 
 class SolrDriver(BaseDriver):
-    """Driver for the Midas solr module's API methods."""
+    """Driver for the solr module API methods."""
 
     def solr_advanced_search(self, query, token=None, limit=20):
         """
@@ -1141,7 +1143,7 @@ class SolrDriver(BaseDriver):
 
 
 class TrackerDriver(BaseDriver):
-    """Driver for the Midas tracker module's API methods."""
+    """Driver for the tracker module API methods."""
 
     def associate_item_with_scalar_data(self, token, item_id, scalar_id,
                                         label):

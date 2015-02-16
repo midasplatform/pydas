@@ -29,12 +29,12 @@ import pydas.exceptions
 
 
 class Communicator(object):
-    """Class for communicating with the Midas API through its drivers."""
+    """Class for communicating with Midas Server through its drivers."""
 
     def __init__(self, url, drivers=None):
         """
-        Constructor. Takes the URL of the server and an optional list of
-        drivers to use.
+        Constructor. Takes the URL of the Midas Server instance and an optional
+        list of drivers to use.
 
         :param url: URL of the server
         :type url: string
