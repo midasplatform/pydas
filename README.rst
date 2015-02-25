@@ -5,8 +5,8 @@ pydas
     :target: https://travis-ci.org/midasplatform/pydas
     :alt: Linux Build Status
 
-.. image:: https://img.shields.io/appveyor/ci/midasplatform/pydas.svg
-    :target: https://ci.appveyor.com/project/midasplatform/pydas
+.. image:: https://img.shields.io/appveyor/ci/jamiesnape/pydas-g6rbj.svg
+    :target: https://ci.appveyor.com/project/jamiesnape/pydas-g6rbj
     :alt: Windows Build Status
 
 .. image:: https://img.shields.io/codacy/3c93eae1ec8f43f79df514bea7993ba1.svg
