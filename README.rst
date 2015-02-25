@@ -9,6 +9,10 @@ pydas
     :target: https://ci.appveyor.com/project/midasplatform/pydas
     :alt: Windows Build Status
 
+.. image:: https://img.shields.io/codacy/3c93eae1ec8f43f79df514bea7993ba1.svg
+    :target: https://www.codacy.com/public/jamiesnape/midasplatformpydas
+    :alt: Code Quality
+
 .. image:: https://readthedocs.org/projects/pydas/badge?version=latest
     :target: http://pydas.readthedocs.org/
     :alt: Documentation
