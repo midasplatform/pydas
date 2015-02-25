@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 ###############################################################################
 #
 # Library: pydas
@@ -22,11 +19,14 @@
 #
 ###############################################################################
 
-"""Global variables to the session."""
+root = true
 
-communicator = None
-email = None
-api_key = None
-application = None
-token = None
-item_upload_callbacks = []
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+
+[*.yml]
+indent_size = 2

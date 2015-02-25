@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-################################################################################
+###############################################################################
 #
-# Library:   pydas
+# Library: pydas
 #
-# Copyright 2010 Kitware Inc. 28 Corporate Drive,
-# Clifton Park, NY, 12065, USA.
-#
+# Copyright 2010 Kitware, Inc., 28 Corporate Dr., Clifton Park, NY 12065, USA.
 # All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 ( the "License" );
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -22,133 +20,194 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-################################################################################
+###############################################################################
 
-"""This module is for the drivers that actually do the work of communication
-with the Midas server. Any drivers that are implemented should use the utility
-functions provided in pydas.drivers.BaseDriver by inheriting from that class.
+"""
+This module is for the drivers that actually do the work of communication
+with the Midas Server instance. Any drivers that are implemented should use the
+utility functions provided in pydas.drivers.BaseDriver by inheriting from that
+class.
 """
 
 import json
 import os
 
 import requests as http
+from requests.exceptions import SSLError
 
 from pydas.exceptions import PydasException
 import pydas.retry as retry
 
 
 class BaseDriver(object):
-    """Base class for the Midas api drivers.
-    """
+    """Base class for the Midas Server API drivers."""
 
     # Class members.
     email = ''
     apikey = ''
 
     def __init__(self, url=""):
-        """Constructor
+        """
+        Constructor.
+
+        :param url: (optional) URL of the server
+        :type url: string
         """
         self._api_suffix = '/api/json?method='
         self._url = url
         self._debug = False
+        self._verify_ssl_certificate = True
         self.auth = None
 
     @property
     def url(self):
-        """Getter for the url
+        """
+        Return the URL of the server.
+
+        :returns: URL of the server
+        :rtype: string
         """
         return self._url
 
     @url.setter
     def url(self, value):
-        """Set the url
+        """
+        Set the URL of the server.
+
+        :param value: URL of the server
+        :type value: string
         """
         self._url = value
 
     @property
     def full_url(self):
-        """Return the full path the the url (including the api extensions).
+        """
+        Return the full URL of the server including the API suffix.
+
+        :returns: Full URL of the server
+        :rtype: string
         """
         return self._url + self._api_suffix
 
     @property
     def debug(self):
-        """Return the debug state of the driver
+        """
+        Return the debug state of this driver.
+
+        :returns: debug state
+        :rtype: bool
         """
         return self._debug
 
     @debug.setter
-    def debug_set(self, value):
-        """Setter for debug state
+    def debug(self, value):
+        """
+        Set the debug state of this driver.
 
-        :param value: The value to set the debug state
+        :param value: debug state
+        :type value: bool
         """
         self._debug = value
 
+    @property
+    def verify_ssl_certificate(self):
+        """
+        Return whether the SSL certificate will be verified.
+
+        :returns: True if the SSL certificate will be verified
+        :rtype: bool
+        """
+        return self._verify_ssl_certificate
+
+    @verify_ssl_certificate.setter
+    def verify_ssl_certificate(self, value):
+        """
+        Set whether the SSL certificate will be verified.
+
+        :param value: If True, the SSL certificate will be verified
+        :type value: bool
+        """
+        self._verify_ssl_certificate = value
+
     @retry.reauth
     def request(self, method, parameters=None, file_payload=None):
-        """Do the generic processing of a request to the server.
+        """
+        Do the generic processing of a request to the server.
 
         If file_payload is specified, it will be PUT to the server.
 
-        :param method: String to be passed to the server indicating the desired
-        method.
-        :param parameters: (optional) Dictionary to pass in the HTTP body.
+        :param method: Desired API method
+        :type method: string
+        :param parameters: (optional) Parameters to pass in the HTTP body
+        :type parameters: None | dict[string, string]
         :param file_payload: (optional) File-like object to be sent with the
-        HTTP request
-        :returns: Dictionary representing the json response to the request.
+            HTTP request
+        :type file_payload: None | file | FileIO
+        :returns: Dictionary representing the JSON response to the request
+        :rtype: dict
+        :raises PydasException: if the request failed
         """
         method_url = self.full_url + method
-        if file_payload:
-            request = http.put(method_url,
-                               data=file_payload.read(),
-                               params=parameters,
-                               allow_redirects=True,
-                               verify=False,
-                               auth=self.auth)
-        else:
-            request = http.post(method_url,
-                                params=parameters,
-                                allow_redirects=True,
-                                verify=False,
-                                auth=self.auth)
+
+        try:
+            if file_payload:
+                request = http.put(method_url,
+                                   data=file_payload.read(),
+                                   params=parameters,
+                                   allow_redirects=True,
+                                   verify=self._verify_ssl_certificate,
+                                   auth=self.auth)
+            else:
+                request = http.post(method_url,
+                                    params=parameters,
+                                    allow_redirects=True,
+                                    verify=self._verify_ssl_certificate,
+                                    auth=self.auth)
+        except SSLError:
+            raise PydasException('Request failed with SSL verification error')
+
         code = request.status_code
         if self._debug:
-            print request.content
+            print(request.content)
         if code != 200 and code != 302:
-            raise PydasException("Request failed with HTTP error code "
-                                 "%d" % code)
+            raise PydasException('Request failed with HTTP error code {0}'
+                                 .format(code))
+
         try:
             response = json.loads(request.content)
         except ValueError:
-            raise PydasException("Request failed with HTTP error code "
-                                 "%d and request.content %s" %
-                                 (code, request.content))
+            raise PydasException('Request failed with HTTP error code {0} '
+                                 'and request content {1}'
+                                 .format(code, request.content))
 
         if response['stat'] != 'ok':
-            exception = PydasException("Request failed with Midas error code "
-                                       "%s: %s" % (response['code'],
-                                                   response['message']))
-            exception.code = response['code']
+            code = response['code']
+            exception = PydasException('Request failed with Midas Server '
+                                       'error code {0}: {1}'
+                                       .format(code, response['message']))
+            exception.code = code
             exception.method = method
             raise exception
         return response['data']
 
-    def login_with_api_key(self, cur_email, cur_apikey, application='Default'):
-        """Login and get a token.
+    def login_with_api_key(self, email, api_key, application='Default'):
+        """
+        Login and get a token. If you do not specify a specific application,
+        'Default' will be used.
 
-        If you do not specify a specific application, 'Default' will be used.
-
-        :param cur_email: The email of the user.
-        :param cur_apikey: A valid api-key assigned to the user.
-        :param application: (optional) Application designated for this api key.
-        :returns: String of the token to be used for interaction with the api
-        until expiration.
+        :param email: Email address of the user
+        :type email: string
+        :param api_key: API key assigned to the user
+        :type api_key: string
+        :param application: (optional) Application designated for this API key
+        :type application: string
+        :returns: Token to be used for interaction with the API until
+            expiration
+        :rtype: string
         """
         parameters = dict()
-        parameters['email'] = BaseDriver.email = cur_email  # Cache email
-        parameters['apikey'] = BaseDriver.apikey = cur_apikey  # Cache api key
+        parameters['email'] = BaseDriver.email = email  # Cache email
+        parameters['apikey'] = BaseDriver.apikey = api_key  # Cache API key
         parameters['appname'] = application
         response = self.request('midas.login', parameters)
         if 'token' in response:  # normal case
@@ -158,45 +217,53 @@ class BaseDriver(object):
 
 
 class CoreDriver(BaseDriver):
-    """Driver for the core API methods of Midas.
-
-    This contains all of the calls necessary to interact with a Midas instance
-    that has no plugins enabled (other than the web-api).
+    """
+    Driver for the core API methods of Midas Server. This contains all of the
+    calls necessary to interact with a Midas Server instance that has no
+    plugins enabled (other than the web API).
     """
 
     def get_server_version(self):
-        """Get the version from the server.
+        """
+        Get the version from the server.
 
-        :returns: String version code from the server.
+        :returns: version code from the server
+        :rtype: string
         """
         response = self.request('midas.version')
         return response['version']
 
     def get_server_info(self):
-        """Get general server information.
+        """
+        Get general server information.
 
         The information provided includes enabled modules as well as enabled
-        web api functions.
+        web API functions.
 
-        :returns: Dictionary of dictionaries containing module and web-api
-        information.
+        :returns: Module and web API information.
+        :rtype: dict
         """
         response = self.request('midas.info')
         return response['version']
 
     def list_modules(self):
-        """List the enabled modules on the server.
+        """
+        List the enabled modules on the server.
 
         :returns: List of names of the enabled modules.
+        :rtype: list[string]
         """
         response = self.request('midas.modules.list')
         return response['modules']
 
     def list_user_folders(self, token):
-        """List the folders in the users home area.
+        """
+        List the folders in the users home area.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :returns: List of dictionaries containing folder information.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['token'] = token
@@ -204,11 +271,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_default_api_key(self, email, password):
-        """Get the default api key for a user.
+        """
+        Get the default API key for a user.
 
         :param email: The email of the user.
+        :type email: string
         :param password: The user's password.
-        :returns: String api-key to confirm that it was fetched successfully.
+        :type password: string
+        :returns: API key to confirm that it was fetched successfully.
+        :rtype: string
         """
         parameters = dict()
         parameters['email'] = email
@@ -217,10 +288,13 @@ class CoreDriver(BaseDriver):
         return response['apikey']
 
     def list_users(self, limit=20):
-        """List the public users in the system.
+        """
+        List the public users in the system.
 
-        :param limit: The number of users to fetch.
+        :param limit: (optional) The number of users to fetch.
+        :type limit: int | long
         :returns: The list of users.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['limit'] = limit
@@ -228,11 +302,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_user_by_name(self, firstname, lastname):
-        """Get a user by the first and last name of that user.
+        """
+        Get a user by the first and last name of that user.
 
         :param firstname: The first name of the user.
+        :type firstname: string
         :param lastname: The last name of the user.
+        :type lastname: string
         :returns: The user requested.
+        :rtype: dict
         """
         parameters = dict()
         parameters['firstname'] = firstname
@@ -241,10 +319,13 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_user_by_id(self, user_id):
-        """Get a user by the first and last name of that user.
+        """
+        Get a user by the first and last name of that user.
 
         :param user_id: The id of the desired user.
+        :type user_id: int | long
         :returns: The user requested.
+        :rtype: dict
         """
         parameters = dict()
         parameters['user_id'] = user_id
@@ -252,10 +333,13 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_user_by_email(self, email):
-        """Get a user by the email of that user.
+        """
+        Get a user by the email of that user.
 
         :param email: The email of the desired user.
+        :type email: string
         :returns: The user requested.
+        :rtype: dict
         """
         parameters = dict()
         parameters['email'] = email
@@ -263,18 +347,26 @@ class CoreDriver(BaseDriver):
         return response
 
     def create_community(self, token, name, **kwargs):
-        """Create a new community or update an existing one using the uuid.
+        """
+        Create a new community or update an existing one using the uuid.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param name: The community name.
+        :type name: string
         :param description: (optional) The community description.
+        :type description: string
         :param uuid: (optional) uuid of the community. If none is passed, will
-        generate one.
+            generate one.
+        :type uuid: string
         :param privacy: (optional) Default 'Public', possible values
-        [Public|Private].
+            [Public|Private].
+        :type privacy: string
         :param can_join: (optional) Default 'Everyone', possible values
-        [Everyone|Invitation].
+            [Everyone|Invitation].
+        :type can_join: string
         :returns: The community dao that was created.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -290,11 +382,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_community_by_name(self, name, token=None):
-        """Get a community based on its name.
+        """
+        Get a community based on its name.
 
         :param name: The name of the target community.
+        :type name: string
         :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :returns: The requested community.
+        :rtype: dict
         """
         parameters = dict()
         parameters['name'] = name
@@ -304,11 +400,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_community_by_id(self, community_id, token=None):
-        """Get a community based on its id.
+        """
+        Get a community based on its id.
 
         :param community_id: The id of the target community.
+        :type community_id: int | long
         :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :returns: The requested community.
+        :rtype: dict
         """
         parameters = dict()
         parameters['id'] = community_id
@@ -318,11 +418,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_community_children(self, community_id, token=None):
-        """Get the non-recursive children of the passed in community_id.
+        """
+        Get the non-recursive children of the passed in community_id.
 
-        :param token: A valid token for the user in question.
         :param community_id: The id of the requested community.
+        :type community_id: int | long
+        :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :returns: List of the folders in the community.
+        :rtype: dict[string, list]
         """
         parameters = dict()
         parameters['id'] = community_id
@@ -332,10 +436,13 @@ class CoreDriver(BaseDriver):
         return response
 
     def list_communities(self, token=None):
-        """List all communities visible to a user.
+        """
+        List all communities visible to a user.
 
         :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :returns: The list of communities.
+        :rtype: list[dict]
         """
         parameters = dict()
         if token:
@@ -344,20 +451,27 @@ class CoreDriver(BaseDriver):
         return response
 
     def create_folder(self, token, name, parent_id, **kwargs):
-        """Create a folder at the destination specified.
+        """
+        Create a folder at the destination specified.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param name: The name of the folder to be created.
+        :type name: string
         :param parent_id: The id of the targeted parent folder.
+        :type parent_id: int | long
         :param description: (optional) The description text of the folder.
+        :type description: string
         :param uuid: (optional) The UUID for the folder. It will be generated
-        if not given.
+            if not given.
+        :type uuid: string
         :param privacy: (optional) The privacy state of the folder
-        ('Public' or 'Private').
+            ('Public' or 'Private').
         :param reuse_existing: (optional) If true, will just return the
-        existing folder if there is one with the name
-        provided.
+            existing folder if there is one with the name provided.
+        :type reuse_existing: bool
         :returns: Dictionary containing the details of the created folder.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -376,11 +490,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def folder_get(self, token, folder_id):
-        """Get the attributes of the specified folder.
+        """
+        Get the attributes of the specified folder.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param folder_id: The id of the requested folder.
+        :type folder_id: int | long
         :returns: Dictionary of the folder attributes.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -389,11 +507,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def folder_children(self, token, folder_id):
-        """Get the non-recursive children of the passed in folder_id.
+        """
+        Get the non-recursive children of the passed in folder_id.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param folder_id: The id of the requested folder.
+        :type folder_id: int | long
         :returns: Dictionary of two lists: 'folders' and 'items'.
+        :rtype: dict[string, list]
         """
         parameters = dict()
         parameters['token'] = token
@@ -402,11 +524,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def delete_folder(self, token, folder_id):
-        """Delete the folder with the passed in folder_id.
+        """
+        Delete the folder with the passed in folder_id.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param folder_id: The id of the folder to be deleted.
+        :type folder_id: int | long
         :returns: None.
+        :rtype: None
         """
         parameters = dict()
         parameters['token'] = token
@@ -415,12 +541,17 @@ class CoreDriver(BaseDriver):
         return response
 
     def move_folder(self, token, folder_id, dest_folder_id):
-        """Move a folder to the destination folder.
+        """
+        Move a folder to the destination folder.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param folder_id: The id of the folder to be moved.
+        :type folder_id: int | long
         :param dest_folder_id: The id of destination (new parent) folder.
+        :type dest_folder_id: int | long
         :returns: Dictionary containing the details of the moved folder.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -430,17 +561,25 @@ class CoreDriver(BaseDriver):
         return response
 
     def create_item(self, token, name, parent_id, **kwargs):
-        """Create an item to the server.
+        """
+        Create an item to the server.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param name: The name of the item to be created.
+        :type name: string
         :param parent_id: The id of the destination folder.
+        :type parent_id: int | long
         :param description: (optional) The description text of the item.
+        :type description: string
         :param uuid: (optional) The UUID for the item. It will be generated if
-        not given.
+            not given.
+        :type uuid: string
         :param privacy: (optional) The privacy state of the item
-        ('Public' or 'Private').
+            ('Public' or 'Private').
+        :type privacy: string
         :returns: Dictionary containing the details of the created item.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -454,11 +593,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def item_get(self, token, item_id):
-        """Get the attributes of the specified item.
+        """
+        Get the attributes of the specified item.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The id of the requested item.
+        :type item_id: int | string
         :returns: Dictionary of the item attributes.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -467,14 +610,19 @@ class CoreDriver(BaseDriver):
         return response
 
     def download_item(self, item_id, token=None, revision=None):
-        """Download an item to disk.
+        """
+        Download an item to disk.
 
         :param item_id: The id of the item to be downloaded.
+        :type item_id: int | long
         :param token: (optional) The authentication token of the user
-        requesting the download.
+            requesting the download.
+        :type token: None | string
         :param revision: (optional) The revision of the item to download, this
-        defaults to HEAD.
+            defaults to HEAD.
+        :type revision: None | int | long
         :returns: A tuple of the filename and the content iterator.
+        :rtype: (string, unknown)
         """
         parameters = dict()
         parameters['id'] = item_id
@@ -490,11 +638,15 @@ class CoreDriver(BaseDriver):
         return filename, request.iter_content(chunk_size=10 * 1024)
 
     def delete_item(self, token, item_id):
-        """Delete the item with the passed in item_id.
+        """
+        Delete the item with the passed in item_id.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The id of the item to be deleted.
+        :type item_id: int | long
         :returns: None.
+        :rtype: None
         """
         parameters = dict()
         parameters['token'] = token
@@ -503,13 +655,18 @@ class CoreDriver(BaseDriver):
         return response
 
     def get_item_metadata(self, item_id, token=None, revision=None):
-        """Get the metadata associated with an item.
+        """
+        Get the metadata associated with an item.
 
         :param item_id: The id of the item for which metadata will be returned
+        :type item_id: int | long
         :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :param revision: (optional) Revision of the item. Defaults to latest
-        revision.
+            revision.
+        :type revision: int | long
         :returns: List of dictionaries containing item metadata.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['id'] = item_id
@@ -520,16 +677,24 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.getmetadata', parameters)
         return response
 
-    def set_item_metadata(self, token, item_id, element, value, qualifier=None):
-        """Set the metadata associated with an item.
+    def set_item_metadata(self, token, item_id, element, value,
+                          qualifier=None):
+        """
+        Set the metadata associated with an item.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The id of the item for which metadata will be set.
+        :type item_id: int | long
         :param element: The metadata element name.
+        :type element: string
         :param value: The metadata value for the field.
+        :type value: string
         :param qualifier: (optional) The metadata qualifier. Defaults to empty
-        string.
+            string.
+        :type qualifier: None | string
         :returns: None.
+        :rtype: None
         """
         parameters = dict()
         parameters['token'] = token
@@ -542,13 +707,18 @@ class CoreDriver(BaseDriver):
         return response
 
     def share_item(self, token, item_id, dest_folder_id):
-        """Share an item to the destination folder.
+        """
+        Share an item to the destination folder.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The id of the item to be shared.
+        :type item_id: int | long
         :param dest_folder_id: The id of destination folder where the item is
-        shared to.
+            shared to.
+        :type dest_folder_id: int | long
         :returns: Dictionary containing the details of the shared item.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -558,14 +728,20 @@ class CoreDriver(BaseDriver):
         return response
 
     def move_item(self, token, item_id, src_folder_id, dest_folder_id):
-        """Move an item from the source folder to the desination folder.
+        """
+        Move an item from the source folder to the destination folder.
 
         :param token: A valid token for the user in question.
-        :param item_id: The id of the item to be moved.
-        :param src_folder_id: The id of source folder where the item is located.
+        :type token: string
+        :param item_id: The id of the item to be moved
+        :type item_id: int | long
+        :param src_folder_id: The id of source folder where the item is located
+        :type src_folder_id: int | long
         :param dest_folder_id: The id of destination folder where the item is
-        moved to.
-        :returns: Dictionary containing the details of the moved item.
+            moved to
+        :type dest_folder_id: int | long
+        :returns: Dictionary containing the details of the moved item
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -576,11 +752,15 @@ class CoreDriver(BaseDriver):
         return response
 
     def search_item_by_name(self, name, token=None):
-        """Return all items.
+        """
+        Return all items.
 
         :param name: The name of the item to search by.
+        :type name: string
         :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :returns: A list of all items with the given name.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['name'] = name
@@ -590,13 +770,17 @@ class CoreDriver(BaseDriver):
         return response['items']
 
     def search_item_by_name_and_folder(self, name, folder_id, token=None):
-        """Return all items with a given name and parent folder id.
+        """
+        Return all items with a given name and parent folder id.
 
         :param name: The name of the item to search by.
+        :type name: string
         :param folder_id: The id of the parent folder to search by.
+        :type folder_id: int | long
         :param token: (optional) A valid token for the user in question.
-
+        :type token: None | string
         :returns: A list of all items with the given name and parent folder id.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['name'] = name
@@ -606,39 +790,55 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.searchbynameandfolder', parameters)
         return response['items']
 
-    def search_item_by_name_and_folder_name(self, name, folder_name, token=None):
-        """Return all items with a given name and parent folder name.
+    def search_item_by_name_and_folder_name(self, name, folder_name,
+                                            token=None):
+        """
+        Return all items with a given name and parent folder name.
 
         :param name: The name of the item to search by.
+        :type name: string
         :param folder_name: The name of the parent folder to search by.
+        :type folder_name: string
         :param token: (optional) A valid token for the user in question.
-
-        :returns: A list of all items with the given name and parent folder name.
+        :type token: None | string
+        :returns: A list of all items with the given name and parent folder
+            name.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['name'] = name
         parameters['folderName'] = folder_name
         if token:
             parameters['token'] = token
-        response = self.request('midas.item.searchbynameandfoldername', parameters)
+        response = self.request('midas.item.searchbynameandfoldername',
+                                parameters)
         return response['items']
 
     def create_link(self, token, folder_id, url, **kwargs):
-        """Create a link bitstream.
+        """
+        Create a link bitstream.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param folder_id: The id of the folder in which to create a new item
-        that will contain the link. The new item will have the same name as the
-        URL unless an item name is supplied.
+            that will contain the link. The new item will have the same name as
+            the URL unless an item name is supplied.
+        :type folder_id: int | long
         :param url: The URL of the link you will create, will be used as the
-        name of the bitstream and of the item unless an item name is supplied.
+            name of the bitstream and of the item unless an item name is
+            supplied.
+        :type url: string
         :param item_name: (optional)  The name of the newly created item, if
-        not supplied, the item will have the same name as the URL.
+            not supplied, the item will have the same name as the URL.
+        :type item_name: string
         :param length: (optional) The length in bytes of the file to which the
-        link points.
+            link points.
+        :type length: int | long
         :param checksum: (optional) The MD5 checksum of the file to which the
-        link points.
+            link points.
+        :type checksum: string
         :returns: The item information of the item created.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -655,48 +855,65 @@ class CoreDriver(BaseDriver):
         return response
 
     def generate_upload_token(self, token, item_id, filename, checksum=None):
-        """Generate a token to use for upload.
+        """
+        Generate a token to use for upload.
 
-        Midas uses a individual token for each upload. The token corresponds to
-        the file specified and that file only. Passing the MD5 checksum allows
-        the server to determine if the file is already in the asset store.
+        Midas Server uses a individual token for each upload. The token
+        corresponds to the file specified and that file only. Passing the MD5
+        checksum allows the server to determine if the file is already in the
+        asset store.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The id of the item in which to upload the file as a
-        bitstream.
+            bitstream.
+        :type item_id: int | long
         :param filename: The name of the file to generate the upload token for.
+        :type filename: string
         :param checksum: (optional) The checksum of the file to upload.
+        :type checksum: None | string
         :returns: String of the upload token.
+        :rtype: string
         """
         parameters = dict()
         parameters['token'] = token
         parameters['itemid'] = item_id
         parameters['filename'] = filename
-        if not checksum is None:
+        if checksum is not None:
             parameters['checksum'] = checksum
         response = self.request('midas.upload.generatetoken', parameters)
         return response['token']
 
-    def perform_upload(self, uploadtoken, filename, **kwargs):
-        """Upload a file into a given item (or just to the public folder if the
+    def perform_upload(self, upload_token, filename, **kwargs):
+        """
+        Upload a file into a given item (or just to the public folder if the
         item is not specified.
 
-        :param uploadtoken: The upload token (returned by generate_upload_token)
-        :param filename: The upload filename. Also used as the path to the file,
-        if 'filepath' is not set.
+        :param upload_token: The upload token (returned by
+            generate_upload_token)
+        :type upload_token: string
+        :param filename: The upload filename. Also used as the path to the
+            file, if 'filepath' is not set.
+        :type filename: string
         :param mode: (optional) Stream or multipart. Default is stream.
-        :param folderid: (optional) The id of the folder to upload into.
+        :type mode: string
+        :param folder_id: (optional) The id of the folder to upload into.
+        :type folder_id: int | long
         :param item_id: (optional) If set, will create a new revision in the
-        existing item.
+            existing item.
+        :type item_id: int | long
         :param revision: (optional) If set, will add a new file into an
-        existing revision. Set this to "head" to add to the most recent
-        revision.
+            existing revision. Set this to 'head' to add to the most recent
+            revision.
+        :type revision: string | int | long
         :param filepath: (optional) The path to the file.
+        :type filepath: string
         :returns: Dictionary containing the details of the item created or
-        changed.
+            changed.
+        :rtype: dict
         """
         parameters = dict()
-        parameters['uploadtoken'] = uploadtoken
+        parameters['uploadtoken'] = upload_token
         parameters['filename'] = filename
         parameters['revision'] = 'head'
 
@@ -705,6 +922,9 @@ class CoreDriver(BaseDriver):
             if key in kwargs:
                 if key == 'item_id':
                     parameters['itemid'] = kwargs[key]
+                    continue
+                if key == 'folder_id':
+                    parameters['folderid'] = kwargs[key]
                     continue
                 parameters[key] = kwargs[key]
 
@@ -719,12 +939,16 @@ class CoreDriver(BaseDriver):
         return response
 
     def search(self, search, token=None):
-        """Get the resources corresponding to a given query.
+        """
+        Get the resources corresponding to a given query.
 
         :param search: The search criterion.
+        :type search: string
         :param token: (optional) The credentials to use when searching.
+        :type token: None | string
         :returns: Dictionary containing the search result. Notable is the
-        dictionary item 'results', which is a list of item details.
+            dictionary item 'results', which is a list of item details.
+        :rtype: dict
         """
         parameters = dict()
         parameters['search'] = search
@@ -735,12 +959,23 @@ class CoreDriver(BaseDriver):
 
 
 class BatchmakeDriver(BaseDriver):
-    """Driver for the Midas batchmake module's API methods.
-    """
+    """Driver for the batchmake module API methods."""
 
     def add_condor_dag(self, token, batchmaketaskid, dagfilename,
                        dagmanoutfilename):
-        """Adds a condor dag to the given batchmake task
+        """
+        Add a Condor DAG to the given Batchmake task.
+
+        :param token: A valid token for the user in question.
+        :type token: string
+        :param batchmaketaskid: id of the Batchmake task for this DAG
+        :type batchmaketaskid: int | long
+        :param dagfilename: Filename of the DAG file
+        :type dagfilename: string
+        :param dagmanoutfilename: Filename of the DAG processing output
+        :type dagmanoutfilename: string
+        :returns: The created Condor DAG DAO
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -753,8 +988,27 @@ class BatchmakeDriver(BaseDriver):
     def add_condor_job(self, token, batchmaketaskid, jobdefinitionfilename,
                        outputfilename, errorfilename, logfilename,
                        postfilename):
-        """Adds a condor dag job to the condor dag associated with this
-        batchmake task
+        """
+        Add a Condor DAG job to the Condor DAG associated with this
+        Batchmake task
+
+        :param token: A valid token for the user in question.
+        :type token: string
+        :param batchmaketaskid: id of the Batchmake task for this DAG
+        :type batchmaketaskid: int | long
+        :param jobdefinitionfilename: Filename of the definition file for the
+            job
+        :type jobdefinitionfilename: string
+        :param outputfilename: Filename of the output file for the job
+        :type outputfilename: string
+        :param errorfilename: Filename of the error file for the job
+        :type errorfilename: string
+        :param logfilename: Filename of the log file for the job
+        :type logfilename: string
+        :param postfilename: Filename of the post script log file for the job
+        :type postfilename: string
+        :return: The created Condor job DAO.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -769,11 +1023,18 @@ class BatchmakeDriver(BaseDriver):
 
 
 class DicomextractorDriver(BaseDriver):
-    """Driver for the Midas dicomextractor module's API methods.
-    """
+    """Driver for the dicomextractor module API methods."""
 
     def extract_dicommetadata(self, token, item_id):
-        """Extracts DICOM metadata from the given item
+        """
+        Extract DICOM metadata from the given item
+
+        :param token: A valid token for the user in question.
+        :type token: string
+        :param item_id: id of the item to be extracted
+        :type item_id: int | long
+        :return: the item revision DAO
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -783,16 +1044,19 @@ class DicomextractorDriver(BaseDriver):
 
 
 class MultiFactorAuthenticationDriver(BaseDriver):
-    """Driver for the multi-factor authentication module's API methods.
-    """
+    """Driver for the multi-factor authentication module API methods."""
 
     def mfa_otp_login(self, temp_token, one_time_pass):
-        """ Log in to get the real token using the temporary token and otp.
+        """
+        Log in to get the real token using the temporary token and otp.
 
         :param temp_token: The temporary token or id returned from normal login
+        :type temp_token: string
         :param one_time_pass: The one-time pass to be sent to the underlying
-        multi-factor engine.
+            multi-factor engine.
+        :type one_time_pass: string
         :returns: A standard token for interacting with the web api.
+        :rtype: string
         """
         parameters = dict()
         parameters['mfaTokenId'] = temp_token
@@ -802,20 +1066,25 @@ class MultiFactorAuthenticationDriver(BaseDriver):
 
 
 class ThumbnailCreatorDriver(BaseDriver):
-    """Driver for the Midas thumbnailcreator module's API methods.
-    """
+    """Driver for the thumbnailcreator module API methods."""
 
     def create_big_thumbnail(self, token, bitstream_id, item_id, width=575):
-        """Create a big thumbnail for the given bitstream with the given width.
+        """
+        Create a big thumbnail for the given bitstream with the given width.
         It is used as the main image of the given item and shown in the item
         view page.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param bitstream_id: The bitstream from which to create the thumbnail.
+        :type bitstream_id: int | long
         :param item_id: The item on which to set the thumbnail.
+        :type item_id: int | long
         :param width: (optional) The width in pixels to which to resize (aspect
-        ratio will be preserved). Defaults to 575.
+            ratio will be preserved). Defaults to 575.
+        :type width: int | long
         :returns: The ItemthumbnailDao object that was created.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -827,34 +1096,42 @@ class ThumbnailCreatorDriver(BaseDriver):
         return response
 
     def create_small_thumbnail(self, token, item_id):
-        """Create a 100x100 small thumbnail for the given item. It is used for
+        """
+        Create a 100x100 small thumbnail for the given item. It is used for
         preview purpose and displayed in the 'preview' and 'thumbnails'
         sidebar sections.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The item on which to set the thumbnail.
+        :type item_id: int | long
         :returns: The item object (with the new thumbnail id) and the path
-        where the newly created thumbnail is stored.
+            where the newly created thumbnail is stored.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
         parameters['itemId'] = item_id
-        response = self.request('midas.thumbnailcreator.create.small.thumbnail',
-                                parameters)
+        response = self.request(
+            'midas.thumbnailcreator.create.small.thumbnail', parameters)
         return response
 
 
 class SolrDriver(BaseDriver):
-    """Driver for the Midas solr module's api methods.
-    """
+    """Driver for the solr module API methods."""
 
     def solr_advanced_search(self, query, token=None, limit=20):
-        """Search item metadata using Apache Solr.
+        """
+        Search item metadata using Apache Solr.
 
         :param query: The Apache Lucene search query.
+        :type query: string
         :param token: (optional) A valid token for the user in question.
+        :type token: None | string
         :param limit: (optional) The limit of the search.
+        :type limit: int | long
         :returns: The list of items that match the search query.
+        :rtype: list[dict]
         """
         parameters = dict()
         parameters['query'] = query
@@ -866,17 +1143,21 @@ class SolrDriver(BaseDriver):
 
 
 class TrackerDriver(BaseDriver):
-    """Driver for the Midas tracker module's api methods.
-    """
+    """Driver for the tracker module API methods."""
 
     def associate_item_with_scalar_data(self, token, item_id, scalar_id,
                                         label):
-        """Associate a result item with a particular scalar value.
+        """
+        Associate a result item with a particular scalar value.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param item_id: The id of the item to associate with the scalar.
+        :type item_id: int | long
         :param scalar_id: Scalar id with which to associate the item.
+        :type scalar_id: int | long
         :param label: The label describing the nature of the association.
+        :type label: string
         """
         parameters = dict()
         parameters['token'] = token
@@ -888,40 +1169,56 @@ class TrackerDriver(BaseDriver):
     def add_scalar_data(self, token, community_id, producer_display_name,
                         metric_name, producer_revision, submit_time, value,
                         **kwargs):
-        """Create a new scalar data point.
+        """
+        Create a new scalar data point.
 
         :param token: A valid token for the user in question.
+        :type token: string
         :param community_id: The id of the community that owns the producer.
+        :type community_id: int | long
         :param producer_display_name: The display name of the producer.
+        :type producer_display_name: string
         :param metric_name: The metric name that identifies which trend this
-        point belongs to.
+            point belongs to.
+        :type metric_name: string
         :param producer_revision: The repository revision of the producer that
-        produced this value.
+            produced this value.
+        :type producer_revision: int | long | string
         :param submit_time: The submit timestamp. Must be parsable with PHP
-        strtotime().
+            strtotime().
+        :type submit_time: string
         :param value: The value of the scalar.
+        :type value: float
         :param config_item_id: (optional) If this value pertains to a specific
-        configuration item, pass its id here.
+            configuration item, pass its id here.
+        :type config_item_id: int | long
         :param test_dataset_id: (optional) If this value pertains to a
-        specific test dataset, pass its id here.
+            specific test dataset, pass its id here.
+        :type test_dataset_id: int | long
         :param truth_dataset_id: (optional) If this value pertains to a
-        specific ground truth dataset, pass its id here.
+            specific ground truth dataset, pass its id here.
+        :type truth_dataset_id: int | long
         :param silent: (optional) If true, do not perform threshold-based email
-        notifications for this scalar.
+            notifications for this scalar.
+        :type silent: bool
         :param unofficial: (optional) If true, creates an unofficial scalar
-        visible only to the user performing the submission.
+            visible only to the user performing the submission.
+        :type unofficial: bool
         :param build_results_url: (optional) A URL for linking to build results
-        for this submission.
+            for this submission.
+        :type build_results_url: string
         :param branch: (optional) The branch name in the source repository for
-        this submission.
+            this submission.
+        :type branch: string
         :param params: (optional) Any key/value pairs that should be displayed
-        with this scalar result.
+            with this scalar result.
         :type params: dict
         :param extra_urls: (optional) Other URL's that should be displayed with
-        with this scalar result. Each element of the list should be a dict with
-        the following keys: label, text, href
-        :type extra_urls: list of dicts
+            with this scalar result. Each element of the list should be a dict
+            with the following keys: label, text, href
+        :type extra_urls: list[dict]
         :returns: The scalar object that was created.
+        :rtype: dict
         """
         parameters = dict()
         parameters['token'] = token
@@ -933,7 +1230,8 @@ class TrackerDriver(BaseDriver):
         parameters['value'] = value
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url', 'branch', 'extra_urls', 'params']
+            'unofficial', 'build_results_url', 'branch', 'extra_urls',
+            'params']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -962,40 +1260,41 @@ class TrackerDriver(BaseDriver):
     def upload_json_results(self, token, filepath, community_id,
                             producer_display_name, metric_name,
                             producer_revision, submit_time, **kwargs):
-        """Upload a JSON file containing numeric scoring results to be added
-        as scalars. File is parsed and then deleted from the server.
+        """
+        Upload a JSON file containing numeric scoring results to be added as
+        scalars. File is parsed and then deleted from the server.
 
         :param token: A valid token for the user in question.
         :param filepath: The path to the JSON file.
         :param community_id: The id of the community that owns the producer.
         :param producer_display_name: The display name of the producer.
         :param producer_revision: The repository revision of the producer
-        that produced this value.
+            that produced this value.
         :param submit_time: The submit timestamp. Must be parsable with PHP
-        strtotime().
+            strtotime().
         :param config_item_id: (optional) If this value pertains to a specific
-        configuration item, pass its id here.
+            configuration item, pass its id here.
         :param test_dataset_id: (optional) If this value pertains to a
-        specific test dataset, pass its id here.
+            specific test dataset, pass its id here.
         :param truth_dataset_id: (optional) If this value pertains to a
-        specific ground truth dataset, pass its id here.
+            specific ground truth dataset, pass its id here.
         :param parent_keys: (optional) Semicolon-separated list of parent keys
-        to look for numeric results under. Use '.' to denote nesting, like in
-        normal javascript syntax.
+            to look for numeric results under. Use '.' to denote nesting, like
+            in normal javascript syntax.
         :param silent: (optional) If true, do not perform threshold-based email
-        notifications for this scalar.
+            notifications for this scalar.
         :param unofficial: (optional) If true, creates an unofficial scalar
-        visible only to the user performing the submission.
+            visible only to the user performing the submission.
         :param build_results_url: (optional) A URL for linking to build results
-        for this submission.
+            for this submission.
         :param branch: (optional) The branch name in the source repository for
-        this submission.
+            this submission.
         :param params: (optional) Any key/value pairs that should be displayed
-        with this scalar result.
+            with this scalar result.
         :type params: dict
         :param extra_urls: (optional) Other URL's that should be displayed with
-        with this scalar result. Each element of the list should be a dict with
-        the following keys: label, text, href
+            with this scalar result. Each element of the list should be a dict
+            with the following keys: label, text, href
         :type extra_urls: list of dicts
         :returns: The list of scalars that were created.
         """
@@ -1008,7 +1307,8 @@ class TrackerDriver(BaseDriver):
         parameters['submitTime'] = submit_time
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
-            'unofficial', 'build_results_url', 'branch', 'extra_urls', 'params']
+            'unofficial', 'build_results_url', 'branch', 'extra_urls',
+            'params']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':

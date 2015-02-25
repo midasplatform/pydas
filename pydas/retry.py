@@ -3,14 +3,12 @@
 
 ###############################################################################
 #
-# Library:   pydas
+# Library: pydas
 #
-# Copyright 2010 Kitware Inc. 28 Corporate Drive,
-# Clifton Park, NY, 12065, USA.
-#
+# Copyright 2010 Kitware, Inc., 28 Corporate Dr., Clifton Park, NY 12065, USA.
 # All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 ( the "License" );
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -24,6 +22,8 @@
 #
 ###############################################################################
 
+"""A decorator for re-authenticating and retrying a failed call."""
+
 import time
 import getpass
 
@@ -32,8 +32,9 @@ import pydas.session as session
 
 
 def reauth(fn):
-    """this decorator will detect a stale token and renew the token if possible,
-    then retry the failed api call.
+    """
+    Re-authentication decorator. This will detect a stale token, renew the
+    token if possible, then retry the failed API call.
     """
     from functools import wraps
 
@@ -43,7 +44,7 @@ def reauth(fn):
             ret_val = fn(*args, **kw)
             return ret_val
         except pydas.exceptions.PydasException as detail:
-            print "Caught PydasException: ", detail
+            print('Caught PydasException: {0}'.format(detail))
             # Unable to authenticate using the given credentials.
             if 'Login failed' in detail.value:
                 print('Login failed')
@@ -51,29 +52,32 @@ def reauth(fn):
             elif '404' in detail.value:
                 print('404 from Server')
                 raise
-            print "Waiting 5 seconds, then retrying request"
+            print('Waiting 5 seconds, then retrying request')
 
             # wait 30 seconds before retrying
             time.sleep(5)
 
-            # renew the token
-            # get the instance of the CoreDriver and set it as "that"
+            # renew the token. get the instance of the CoreDriver and set it
+            # as 'that'
             that = args[0]
             session.token = that.login_with_api_key(that.__class__.email,
                                                     that.__class__.apikey)
-            if session.communicator is not None:  # We're using the high-level api
-                if len(session.token) < 10:  # HACK to check for mfa being enabled
+            # True if the high-level API is being used
+            if session.communicator is not None:
+                # True if MFA is enabled
+                if len(session.token) < 10:
                     one_time_pass = getpass.getpass('One-Time Password: ')
-                    session.token = session.communicator.mfa_otp_login(session.token,
-                                                                       one_time_pass)
-            print session.token
+                    session.token = session.communicator.mfa_otp_login(
+                        session.token, one_time_pass)
+            print(session.token)
 
-            # now fix up the arguments of the original call to use the renewed token
+            # now fix up the arguments of the original call to use the renewed
+            # token
             args_list = list(args)
             args_list[2]['token'] = session.token
             args = tuple(args_list)
 
-            # try the api call again
+            # try the API call again
             ret_val = fn(*args, **kw)
             return ret_val
 

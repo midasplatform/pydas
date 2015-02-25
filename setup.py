@@ -3,14 +3,12 @@
 
 ###############################################################################
 #
-# Library:   pydas
+# Library: pydas
 #
-# Copyright 2010 Kitware Inc. 28 Corporate Drive,
-# Clifton Park, NY, 12065, USA.
-#
+# Copyright 2010 Kitware, Inc., 28 Corporate Dr., Clifton Park, NY 12065, USA.
 # All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 ( the "License" );
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -38,8 +36,8 @@ packages = ['pydas']
 requires = ['requests']
 
 setup(name='pydas',
-      version='0.2.36',
-      description='Upload data to a Midas-based application with Python.',
+      version='0.3.0',
+      description='Upload data to a Midas Server application with Python.',
       long_description=open('README.rst').read(),
       author='Patrick Reynolds',
       author_email='patrick.reynolds@kitware.com',
@@ -56,5 +54,8 @@ setup(name='pydas',
           'Programming Language :: Python',
           'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3.2',
+          'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
       ),
       )
