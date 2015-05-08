@@ -32,10 +32,10 @@ class.
 import json
 import os
 
-import requests as http
-from requests.exceptions import SSLError
+import requests
+import requests.exceptions
 
-from pydas.exceptions import PydasException
+import pydas.exceptions
 import pydas.retry as retry
 
 
@@ -145,50 +145,118 @@ class BaseDriver(object):
         :type file_payload: None | file | FileIO
         :returns: Dictionary representing the JSON response to the request
         :rtype: dict
-        :raises PydasException: if the request failed
+        :raises pydas.exceptions.PydasException: if the request failed
         """
         method_url = self.full_url + method
+        response = None
 
         try:
             if file_payload:
-                request = http.put(method_url,
-                                   data=file_payload.read(),
-                                   params=parameters,
-                                   allow_redirects=True,
-                                   verify=self._verify_ssl_certificate,
-                                   auth=self.auth)
+                response = requests.put(method_url,
+                                        data=file_payload.read(),
+                                        params=parameters,
+                                        allow_redirects=True,
+                                        verify=self._verify_ssl_certificate,
+                                        auth=self.auth)
             else:
-                request = http.post(method_url,
-                                    params=parameters,
-                                    allow_redirects=True,
-                                    verify=self._verify_ssl_certificate,
-                                    auth=self.auth)
-        except SSLError:
-            raise PydasException('Request failed with SSL verification error')
+                response = requests.post(method_url,
+                                         params=parameters,
+                                         allow_redirects=True,
+                                         verify=self._verify_ssl_certificate,
+                                         auth=self.auth)
 
-        code = request.status_code
-        if self._debug:
-            print(request.content)
-        if code != 200 and code != 302:
-            raise PydasException('Request failed with HTTP error code {0}'
-                                 .format(code))
+        except requests.exceptions.SSLError:
+            exception = pydas.exceptions.SSLVerificationFailed(
+                'Request failed with an SSL verification error')
+            exception.method = method
+            exception.request = response.request
+            raise exception
+
+        except requests.exceptions.ConnectionError:
+            exception = pydas.exceptions.RequestError(
+                'Request failed with a connection error')
+            exception.method = method
+            exception.request = response.request
+            raise pydas.exceptions.RequestError
+
+        status_code = response.status_code
 
         try:
-            response = json.loads(request.content)
-        except ValueError:
-            raise PydasException('Request failed with HTTP error code {0} '
-                                 'and request content {1}'
-                                 .format(code, request.content))
+            response.raise_for_status()
 
-        if response['stat'] != 'ok':
-            code = response['code']
-            exception = PydasException('Request failed with Midas Server '
-                                       'error code {0}: {1}'
-                                       .format(code, response['message']))
-            exception.code = code
+        except requests.exceptions.HTTPError:
+            error_code = None
+            message = 'Request failed with HTTP status code {0}'.format(
+                status_code)
+
+            try:
+                content = response.json()
+
+                if 'code' in content:
+                    error_code = int(content['code'])
+                    message = 'Request failed with HTTP status code {0}, ' \
+                        'Midas Server error code {1}, and response content ' \
+                        '{2}'.format(status_code, error_code, response.content)
+
+            except ValueError:
+                pass
+
+            exception = pydas.exceptions \
+                .get_exception_from_status_and_error_codes(status_code,
+                                                           error_code,
+                                                           message)
+            exception.code = error_code
+            exception.method = method
+            exception.response = response
+            raise exception
+
+        try:
+            content = response.json()
+
+        except ValueError:
+            exception = pydas.exceptions.ParseError(
+                'Request failed with HTTP status code {0} and response '
+                'content {1}'.format(status_code, response.content))
+            exception.method = method
+            exception.response = response
+            raise exception
+
+        if 'stat' not in content:
+            exception = pydas.exceptions.ParseError(
+                'Request failed with HTTP status code {0} and response '
+                'content {1}'.format(status_code, response.content))
             exception.method = method
             raise exception
-        return response['data']
+
+        if content['stat'] != 'ok':
+            if 'code' in content:
+                error_code = int(content['code'])
+                message = 'Request failed with HTTP status code {0}, Midas ' \
+                    'Server error code {1}, and response content {2}' \
+                    .format(status_code, error_code, response.content)
+            else:
+                error_code = None
+                message = 'Request failed with HTTP status code {0} and ' \
+                    'response content {1}'.format(status_code,
+                                                  response.content)
+
+            exception = pydas.exceptions \
+                .get_exception_from_status_and_error_codes(status_code,
+                                                           error_code,
+                                                           message)
+            exception.method = method
+            exception.response = response
+            raise exception
+
+        if 'data' not in content:
+            exception = pydas.exceptions.ParseError(
+                'Request failed with HTTP status code {0} and response '
+                'content {1}'.format(status_code, response.content))
+            exception.method = method
+            exception.response = response
+            raise exception
+
+        return content['data']
 
     def login_with_api_key(self, email, api_key, application='Default'):
         """
@@ -631,9 +699,9 @@ class CoreDriver(BaseDriver):
         if revision:
             parameters['revision'] = revision
         method_url = self.full_url + 'midas.item.download'
-        request = http.get(method_url,
-                           params=parameters,
-                           verify=False)
+        request = requests.get(method_url,
+                               params=parameters,
+                               verify=self._verify_ssl_certificate)
         filename = request.headers['content-disposition'][21:].strip('"')
         return filename, request.iter_content(chunk_size=10 * 1024)
 
