@@ -44,7 +44,8 @@ def reauth(fn):
             ret_val = fn(*args, **kw)
             return ret_val
         except pydas.exceptions.PydasException as detail:
-            print('Caught PydasException: {0}'.format(detail))
+            print('pydas.exceptions.{0}: {1}'.format(type(detail).__name__,
+                                                     detail))
             # Unable to authenticate using the given credentials.
             if 'Login failed' in detail.value:
                 print('Login failed')
@@ -54,7 +55,7 @@ def reauth(fn):
                 raise
             print('Waiting 5 seconds, then retrying request')
 
-            # wait 30 seconds before retrying
+            # wait 5 seconds before retrying
             time.sleep(5)
 
             # renew the token. get the instance of the CoreDriver and set it
