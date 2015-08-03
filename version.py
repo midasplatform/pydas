@@ -44,7 +44,7 @@ class Usage(Exception):
 
 def version(versioner):
     conf_lines = []
-    conf = open('docs/source/conf.py')
+    conf = open('docs/conf.py')
 
     for line in conf:
         if versioner != 'patch':
@@ -81,7 +81,7 @@ def version(versioner):
         conf_lines.append(line)
 
     conf.close()
-    conf = open('docs/source/conf.py', 'w')
+    conf = open('docs/conf.py', 'w')
     conf.write(''.join(conf_lines))
     conf.close()
 
