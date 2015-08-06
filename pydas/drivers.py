@@ -1234,6 +1234,27 @@ class TrackerDriver(BaseDriver):
         parameters['label'] = label
         self.request('midas.tracker.item.associate', parameters)
 
+    def create_submission(self, token, **kwargs):
+        """
+        Associate a result item with a particular scalar value.
+
+        :param token: A valid token for the user in question.
+        :type token: string
+        :param uuid (optional) The uuid of the submission (must be unique)
+        :type uuid: string
+        :param name (optional) The name of the submission
+        :type name: string
+        :returns: The submission object that was created.
+        :rtype: dict
+        """
+        parameters = {}
+        parameters['token'] = token
+        optional_keys = ['uuid', 'name']
+        for key in optional_keys:
+            if key in kwargs:
+                parameters[key] = kwargs[key]
+        return self.request('midas.tracker.submission.create', parameters)
+
     def add_scalar_data(self, token, community_id, producer_display_name,
                         metric_name, producer_revision, submit_time, value,
                         **kwargs):
@@ -1278,6 +1299,12 @@ class TrackerDriver(BaseDriver):
         :param branch: (optional) The branch name in the source repository for
             this submission.
         :type branch: string
+        :param submission_id: (optional) The id of the submission.
+        :type submission_id: int | long
+        :param submission_uuid: (optional) The uuid of the submission. If one
+            does not exist, it will be created.
+        :type submission_uuid: string
+        :type branch: string
         :param params: (optional) Any key/value pairs that should be displayed
             with this scalar result.
         :type params: dict
@@ -1299,7 +1326,7 @@ class TrackerDriver(BaseDriver):
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
             'unofficial', 'build_results_url', 'branch', 'extra_urls',
-            'params']
+            'params', 'submission_id', 'submission_uuid']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -1320,6 +1347,10 @@ class TrackerDriver(BaseDriver):
                 elif key == 'unofficial':
                     if kwargs[key]:
                         parameters[key] = kwargs[key]
+                elif key == 'submission_id':
+                    parameters['submissionId'] = kwargs[key]
+                elif key == 'submission_uuid':
+                    parameters['submissionUuid'] = kwargs[key]
                 else:
                     parameters[key] = kwargs[key]
         response = self.request('midas.tracker.scalar.add', parameters)
