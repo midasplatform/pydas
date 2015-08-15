@@ -1312,6 +1312,8 @@ class TrackerDriver(BaseDriver):
             with this scalar result. Each element of the list should be a dict
             with the following keys: label, text, href
         :type extra_urls: list[dict]
+        :param unit: (optional) The unit of the scalar value.
+        :type unit: string
         :returns: The scalar object that was created.
         :rtype: dict
         """
@@ -1326,7 +1328,7 @@ class TrackerDriver(BaseDriver):
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
             'unofficial', 'build_results_url', 'branch', 'extra_urls',
-            'params', 'submission_id', 'submission_uuid']
+            'params', 'submission_id', 'submission_uuid', 'unit']
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -1351,6 +1353,8 @@ class TrackerDriver(BaseDriver):
                     parameters['submissionId'] = kwargs[key]
                 elif key == 'submission_uuid':
                     parameters['submissionUuid'] = kwargs[key]
+                elif key == 'unit':
+                    parameters['unit'] = kwargs[key]
                 else:
                     parameters[key] = kwargs[key]
         response = self.request('midas.tracker.scalar.add', parameters)
