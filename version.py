@@ -48,7 +48,7 @@ def version(versioner):
 
     for line in conf:
         if versioner != 'patch':
-            match = re.match('version = \'([0-9]*).([0-9]*)\'', line)
+            match = re.match('^version = \'([0-9]*).([0-9]*)\'$', line)
 
             if match is not None:
                 ver = {'major': match.group(1), 'minor': match.group(2)}
@@ -59,7 +59,7 @@ def version(versioner):
                 line = 'version = \'{0}.{1}\'\n'.format(ver['major'],
                                                         ver['minor'])
 
-        match = re.match('release = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
+        match = re.match('^release = \'([0-9]*).([0-9]*).([0-9]*)\'$', line)
 
         if match is not None:
             rel = {'major': match.group(1),
@@ -91,7 +91,7 @@ def version(versioner):
     init = open('pydas/__init__.py')
 
     for line in init:
-        match = re.match('__version__ = \'([0-9]*).([0-9]*).([0-9]*)\'', line)
+        match = re.match('^__version__ = \'([0-9]*).([0-9]*).([0-9]*)\'$', line)
 
         if match is not None:
             ver = {'major': match.group(1),
@@ -123,7 +123,7 @@ def version(versioner):
     setup = open('setup.py')
 
     for line in setup:
-        match = re.match('version=\'([0-9]*).([0-9]*).([0-9]*)\'', line)
+        match = re.match('^      version=\'([0-9]*).([0-9]*).([0-9]*)\',$', line)
 
         if match is not None:
             ver = {'major': match.group(1),
@@ -142,7 +142,7 @@ def version(versioner):
             new_version = '{0}.{1}.{2}'.format(ver['major'], ver['minor'],
                                                ver['patch'])
 
-            line = 'version=\'{0}\'\n'.format(new_version)
+            line = '      version=\'{0}\',\n'.format(new_version)
 
         setup_lines.append(line)
 
@@ -151,7 +151,7 @@ def version(versioner):
     setup.write(''.join(setup_lines))
     setup.close()
 
-    print('updated version from {0} to{1}'.format(old_version, new_version))
+    print('updated version from {0} to {1}'.format(old_version, new_version))
 
 
 def main(argv=None):
