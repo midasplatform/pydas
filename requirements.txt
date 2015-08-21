@@ -1,1 +1,4 @@
-requests[security]
+ndg-httpsclient
+pyasn1
+pyOpenSSL
+requests
