@@ -967,8 +967,9 @@ class CoreDriver(BaseDriver):
         :type mode: string
         :param folder_id: (optional) The id of the folder to upload into.
         :type folder_id: int | long
-        :param item_id: (optional) If set, will create a new revision in the
-            existing item.
+        :param item_id: (optional) If set, will append item ``bitstreams`` to
+            the latest revision (or the one set using :param:`revision` ) of
+            the existing item.
         :type item_id: int | long
         :param revision: (optional) If set, will add a new file into an
             existing revision. Set this to 'head' to add to the most recent
@@ -976,6 +977,9 @@ class CoreDriver(BaseDriver):
         :type revision: string | int | long
         :param filepath: (optional) The path to the file.
         :type filepath: string
+        :param create_additional_revision: (optional) If set, will create a
+            new revision in the existing item.
+        :type create_additional_revision: bool
         :returns: Dictionary containing the details of the item created or
             changed.
         :rtype: dict
@@ -983,8 +987,14 @@ class CoreDriver(BaseDriver):
         parameters = dict()
         parameters['uploadtoken'] = upload_token
         parameters['filename'] = filename
-        parameters['revision'] = 'head'
 
+        try:
+            create_additional_revision = kwargs['create_additional_revision']
+        except KeyError:
+            create_additional_revision = False
+
+        if not create_additional_revision:
+            parameters['revision'] = 'head'
         optional_keys = ['mode', 'folderid', 'item_id', 'itemid', 'revision']
         for key in optional_keys:
             if key in kwargs:
