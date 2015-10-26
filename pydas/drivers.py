@@ -931,6 +931,12 @@ class CoreDriver(BaseDriver):
         checksum allows the server to determine if the file is already in the
         asset store.
 
+        If :param:`checksum` is passed and the token returned is blank, the
+        server already has this file and there is no need to follow this
+        call with a call to `perform_upload`, as the passed in file will have
+        been added as a bitstream to the item's latest revision, creating a
+        new revision if one doesn't exist.
+
         :param token: A valid token for the user in question.
         :type token: string
         :param item_id: The id of the item in which to upload the file as a
