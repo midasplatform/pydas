@@ -953,7 +953,7 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['itemid'] = item_id
         parameters['filename'] = filename
-        optional_keys = ['checksum']
+        optional_keys = ['checksum', 'create_additional_revision']
         for key in optional_keys:
             if key in kwargs:
                 parameters[key] = kwargs[key]
