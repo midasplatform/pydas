@@ -36,7 +36,8 @@ import requests
 import requests.exceptions
 
 import pydas.exceptions
-import pydas.retry as retry
+
+from retrying import retry
 
 
 class BaseDriver(object):
@@ -129,7 +130,9 @@ class BaseDriver(object):
         """
         self._verify_ssl_certificate = value
 
-    @retry.reauth
+    @retry(wait_exponential_multiplier=1000,
+           wait_exponential_max=5000,
+           stop_max_attempt_number=5)
     def request(self, method, parameters=None, file_payload=None):
         """
         Do the generic processing of a request to the server.
@@ -176,8 +179,9 @@ class BaseDriver(object):
             exception = pydas.exceptions.RequestError(
                 'Request failed with a connection error')
             exception.method = method
-            exception.request = response.request
-            raise pydas.exceptions.RequestError
+            if response is not None:
+                exception.request = response.request
+            raise exception
 
         status_code = response.status_code
 
