@@ -35,9 +35,9 @@ import os
 import requests
 import requests.exceptions
 
-import pydas.exceptions
-
 from retrying import retry
+
+import pydas.exceptions
 
 
 class BaseDriver(object):

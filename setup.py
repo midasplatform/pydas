@@ -33,7 +33,7 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 packages = ['pydas']
-requires = ['requests']
+requires = ['requests', 'retrying']
 
 setup(name='pydas',
       version='0.3.4',
