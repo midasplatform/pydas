@@ -1334,6 +1334,9 @@ class TrackerDriver(BaseDriver):
         :type extra_urls: list[dict]
         :param unit: (optional) The unit of the scalar value.
         :type unit: string
+        :param reproduction_command: (optional) The command to reproduce this
+            scalar.
+        :type reproduction_command: string
         :returns: The scalar object that was created.
         :rtype: dict
         """
@@ -1348,7 +1351,9 @@ class TrackerDriver(BaseDriver):
         optional_keys = [
             'config_item_id', 'test_dataset_id', 'truth_dataset_id', 'silent',
             'unofficial', 'build_results_url', 'branch', 'extra_urls',
-            'params', 'submission_id', 'submission_uuid', 'unit']
+            'params', 'submission_id', 'submission_uuid', 'unit',
+            'reproduction_command'
+        ]
         for key in optional_keys:
             if key in kwargs:
                 if key == 'config_item_id':
@@ -1375,6 +1380,8 @@ class TrackerDriver(BaseDriver):
                     parameters['submissionUuid'] = kwargs[key]
                 elif key == 'unit':
                     parameters['unit'] = kwargs[key]
+                elif key == 'reproduction_command':
+                    parameters['reproductionCommand'] = kwargs[key]
                 else:
                     parameters[key] = kwargs[key]
         response = self.request('midas.tracker.scalar.add', parameters)
