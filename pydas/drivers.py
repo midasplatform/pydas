@@ -1334,7 +1334,7 @@ class TrackerDriver(BaseDriver):
         :type extra_urls: list[dict]
         :param unit: (optional) The unit of the scalar value.
         :type unit: string
-        :param reproduction_command: (optional) the command to reproduce this
+        :param reproduction_command: (optional) The command to reproduce this
             scalar.
         :type reproduction_command: string
         :returns: The scalar object that was created.
