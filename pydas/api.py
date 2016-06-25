@@ -165,7 +165,7 @@ def add_folder_download_callback(callback):
 
     :param callback: A function that takes four arguments. The first argument
         is the communicator object of the current pydas context, the second is
-        the currently active API token and the third is the dict of folder info,
+        the currently active API token, the third is the dict of folder info,
         the fourth argument is the local download path of the folder.
     :type callback: (Communicator, string, dict, string) -> unknown
     """
@@ -622,6 +622,7 @@ def _download_folder_recursive(folder_id, path='.'):
         _download_folder_recursive(folder['folder_id'], folder_path)
     for callback in session.folder_download_callbacks:
         callback(session.communicator, session.token, cur_folder, folder_path)
+
 
 def download_folder_recursive(folder_id, path='.'):
     """
