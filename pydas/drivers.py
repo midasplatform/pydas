@@ -705,7 +705,7 @@ class CoreDriver(BaseDriver):
         method_url = self.full_url + 'midas.item.download'
         request = requests.get(method_url,
                                params=parameters,
-                               stream=True
+                               stream=True,
                                verify=self._verify_ssl_certificate)
         filename = request.headers['content-disposition'][21:].strip('"')
         return filename, request.iter_content(chunk_size=10 * 1024)
