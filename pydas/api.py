@@ -24,6 +24,7 @@
 
 """API for pydas."""
 
+import errno
 import getpass
 import glob
 import os
@@ -137,6 +138,46 @@ def add_item_upload_callback(callback):
     :type callback: (Communicator, string, int) -> unknown
     """
     session.item_upload_callbacks.append(callback)
+
+
+def add_item_download_callback(callback):
+    """
+    Pass a function to be called when an item has finished downloading.
+    This can be used for performing notifications of download progress or
+    calling additional API functions.
+
+    :param callback: A function that takes four arguments. The first argument
+        is the communicator object of the current pydas context, the second is
+        the currently active API token and the third is the dict of item info,
+        the fourth argument is the local download path of the item.
+    :type callback: (Communicator, string, dict, string) -> unknown
+    """
+    session.item_download_callbacks.append(callback)
+
+
+def add_folder_download_callback(callback):
+    """
+    Pass a function to be called when an folder has finished downloading,
+    which happens after all of its items and recursive children folders
+    have downloaded.
+    This can be used for performing notifications of download progress or
+    calling additional API functions.
+
+    :param callback: A function that takes four arguments. The first argument
+        is the communicator object of the current pydas context, the second is
+        the currently active API token, the third is the dict of folder info,
+        the fourth argument is the local download path of the folder.
+    :type callback: (Communicator, string, dict, string) -> unknown
+    """
+    session.folder_download_callbacks.append(callback)
+
+
+def allow_existing_download_paths():
+    """
+    Allow the download to continue if any download paths already
+    exit, instead of excepting.
+    """
+    session.allow_existing_download_paths = True
 
 
 def _create_or_reuse_item(local_file, parent_folder_id, reuse_existing=False):
@@ -563,18 +604,39 @@ def _download_folder_recursive(folder_id, path='.'):
     session.token = verify_credentials()
 
     cur_folder = session.communicator.folder_get(session.token, folder_id)
-    folder_path = os.path.join(path, cur_folder['name'])
+    # Replace any '/' in the folder name.
+    folder_path = os.path.join(path, cur_folder['name'].replace('/', '_'))
     print('Creating folder at {0}'.format(folder_path))
-    os.mkdir(folder_path)
+    try:
+        os.mkdir(folder_path)
+    except OSError as e:
+        if e.errno == errno.EEXIST and session.allow_existing_download_paths:
+            pass
+        else:
+            raise
     cur_children = session.communicator.folder_children(
         session.token, folder_id)
     for item in cur_children['items']:
-        _download_item(item['item_id'], folder_path)
+        _download_item(item['item_id'], folder_path, item=item)
     for folder in cur_children['folders']:
         _download_folder_recursive(folder['folder_id'], folder_path)
+    for callback in session.folder_download_callbacks:
+        callback(session.communicator, session.token, cur_folder, folder_path)
 
 
-def _download_item(item_id, path='.'):
+def download_folder_recursive(folder_id, path='.'):
+    """
+    Download a folder to the specified path along with any children.
+
+    :param folder_id: The id of the target folder
+    :type folder_id: int | long
+    :param path: (optional) the location to download the folder
+    :type path: string
+    """
+    _download_folder_recursive(folder_id, path)
+
+
+def _download_item(item_id, path='.', item=None):
     """
     Download the requested item to the specified path.
 
@@ -582,6 +644,8 @@ def _download_item(item_id, path='.'):
     :type item_id: int | long
     :param path: (optional) the location to download the item
     :type path: string
+    :param item: The dict of item info
+    :type item: dict | None
     """
     session.token = verify_credentials()
 
@@ -593,6 +657,10 @@ def _download_item(item_id, path='.'):
     for block in content_iter:
         out_file.write(block)
     out_file.close()
+    for callback in session.item_download_callbacks:
+        if not item:
+            item = session.communicator.item_get(session.token, item_id)
+        callback(session.communicator, session.token, item, item_path)
 
 
 def download(server_path, local_path='.'):

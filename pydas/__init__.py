@@ -24,6 +24,16 @@
 
 """Import high-level pydas functions."""
 
-from pydas.api import login, upload, download, add_item_upload_callback  # noqa
+# flake8: noqa
+from pydas.api import (
+    login,
+    upload,
+    download,
+    add_item_upload_callback,
+    add_item_download_callback,
+    download_folder_recursive,
+    add_folder_download_callback,
+    allow_existing_download_paths
+)
 
 __version__ = '0.3.6'

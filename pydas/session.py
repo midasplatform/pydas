@@ -30,3 +30,6 @@ api_key = None
 application = None
 token = None
 item_upload_callbacks = []
+item_download_callbacks = []
+folder_download_callbacks = []
+allow_existing_download_paths = False
