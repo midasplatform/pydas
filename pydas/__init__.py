@@ -36,4 +36,4 @@ from pydas.api import (
     allow_existing_download_paths
 )
 
-__version__ = '0.3.6'
+__version__ = '0.3.7'

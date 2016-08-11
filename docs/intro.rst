@@ -14,7 +14,7 @@ Requirements
 
 * An `enabled <https://www.kitware.com/midaswiki/index.php/Documentation/Latest/User/Administration/ManagePlugins>`_  web API plugin for your Midas Server 3 instance
 
-* `Python <https://www.python.org/>`_ version 2.6 or later
+* `Python <https://www.python.org/>`_ version 2.7 or later
 
 * `requests <http://docs.python-requests.org/en/latest/>`_ Python package
 

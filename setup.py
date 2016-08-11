@@ -36,7 +36,7 @@ packages = ['pydas']
 requires = ['requests', 'retrying']
 
 setup(name='pydas',
-      version='0.3.6',
+      version='0.3.7',
       description='Upload data to a Midas Server application with Python.',
       long_description=open('README.rst').read(),
       author='Patrick Reynolds',
@@ -52,7 +52,6 @@ setup(name='pydas',
           'Natural Language :: English',
           'License :: OSI Approved :: Apache Software License',
           'Programming Language :: Python',
-          'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.2',
           'Programming Language :: Python :: 3.3',
