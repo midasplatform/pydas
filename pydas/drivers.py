@@ -927,7 +927,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.link.create', parameters)
         return response
 
-    def generate_upload_token(self, token, item_id, filename, checksum=None):
+    def generate_upload_token(self, token, item_id, filename, **kwargs):
         """
         Generate a token to use for upload.
 
@@ -958,8 +958,10 @@ class CoreDriver(BaseDriver):
         parameters['token'] = token
         parameters['itemid'] = item_id
         parameters['filename'] = filename
-        if checksum is not None:
-            parameters['checksum'] = checksum
+        optional_keys = ['checksum', 'create_additional_revision']
+        for key in optional_keys:
+            if key in kwargs:
+                parameters[key] = kwargs[key]
         response = self.request('midas.upload.generatetoken', parameters)
         return response['token']
 
