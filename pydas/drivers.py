@@ -130,26 +130,9 @@ class BaseDriver(object):
         """
         self._verify_ssl_certificate = value
 
-    @retry(wait_exponential_multiplier=1000,
-           wait_exponential_max=5000,
-           stop_max_attempt_number=5)
-    def request(self, method, parameters=None, file_payload=None):
-        """
-        Do the generic processing of a request to the server.
 
-        If file_payload is specified, it will be PUT to the server.
+    def _request(self, method, parameters=None, file_payload=None):
 
-        :param method: Desired API method
-        :type method: string
-        :param parameters: (optional) Parameters to pass in the HTTP body
-        :type parameters: None | dict[string, string]
-        :param file_payload: (optional) File-like object to be sent with the
-            HTTP request
-        :type file_payload: None | file | FileIO
-        :returns: Dictionary representing the JSON response to the request
-        :rtype: dict
-        :raises pydas.exceptions.PydasException: if the request failed
-        """
         method_url = self.full_url + method
         response = None
 
@@ -213,6 +196,30 @@ class BaseDriver(object):
             exception.method = method
             exception.response = response
             raise exception
+
+        return response
+
+    @retry(wait_exponential_multiplier=1000,
+           wait_exponential_max=5000,
+           stop_max_attempt_number=5)
+    def request(self, method, parameters=None, file_payload=None):
+        """
+        Do the generic processing of a request to the server.
+
+        If file_payload is specified, it will be PUT to the server.
+
+        :param method: Desired API method
+        :type method: string
+        :param parameters: (optional) Parameters to pass in the HTTP body
+        :type parameters: None | dict[string, string]
+        :param file_payload: (optional) File-like object to be sent with the
+            HTTP request
+        :type file_payload: None | file | FileIO
+        :returns: Dictionary representing the JSON response to the request
+        :rtype: dict
+        :raises pydas.exceptions.PydasException: if the request failed
+        """
+        response = self._request(method, parameters=parameters, file_payload=file_payload)
 
         try:
             content = response.json()
