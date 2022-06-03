@@ -31,8 +31,8 @@ import os
 import os.path
 import hashlib
 
-from core import Communicator
-import session
+from pydas.core import Communicator
+from pydas import session
 
 
 def login(email=None, password=None, api_key=None, application='Default',
