@@ -657,7 +657,18 @@ def _download_item(item_id, path='.', item=None):
         print('ERROR: Failed to download item_id {0}'.format(item_id))
         return
     item_path = os.path.join(path, filename)
-    print('Creating file at {0}'.format(item_path))
+    if os.path.exists(item_path):
+        if not item:
+            item = session.communicator.item_get(session.token, item_id)
+        local_checksum = _streaming_file_md5(item_path)
+        remote_checksum = item['revisions'][-1]['bitstreams'][-1]['checksum']
+        if local_checksum == remote_checksum:
+            print('Skipping existing file at {0}'.format(item_path))
+            return
+        print('Replacing file at {0}\n   local md5 [{1}]\n  remote md5 [{2}]'.format(
+            item_path, local_checksum, remote_checksum))
+    else:
+        print('Creating file at {0}'.format(item_path))
     out_file = open(item_path, 'wb')
     for block in content_iter:
         out_file.write(block)
