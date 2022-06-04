@@ -32,6 +32,7 @@ import os.path
 import hashlib
 
 from pydas.core import Communicator
+from pydas import exceptions
 from pydas import session
 
 
@@ -649,8 +650,12 @@ def _download_item(item_id, path='.', item=None):
     """
     session.token = verify_credentials()
 
-    filename, content_iter = session.communicator.download_item(
-        item_id, session.token)
+    try:
+        filename, content_iter = session.communicator.download_item(
+            item_id, session.token)
+    except exceptions.HTTPError:
+        print('ERROR: Failed to download item_id {0}'.format(item_id))
+        return
     item_path = os.path.join(path, filename)
     print('Creating file at {0}'.format(item_path))
     out_file = open(item_path, 'wb')

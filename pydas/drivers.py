@@ -131,7 +131,7 @@ class BaseDriver(object):
         self._verify_ssl_certificate = value
 
 
-    def _request(self, method, parameters=None, file_payload=None):
+    def _request(self, method, parameters=None, file_payload=None, download=False):
 
         method_url = self.full_url + method
         response = None
@@ -142,6 +142,12 @@ class BaseDriver(object):
                                         data=file_payload.read(),
                                         params=parameters,
                                         allow_redirects=True,
+                                        verify=self._verify_ssl_certificate,
+                                        auth=self.auth)
+            elif download:
+                response = requests.get(method_url,
+                                        stream=True,
+                                        params=parameters,
                                         verify=self._verify_ssl_certificate,
                                         auth=self.auth)
             else:
@@ -709,13 +715,11 @@ class CoreDriver(BaseDriver):
             parameters['token'] = token
         if revision:
             parameters['revision'] = revision
-        method_url = self.full_url + 'midas.item.download'
-        request = requests.get(method_url,
-                               params=parameters,
-                               stream=True,
-                               verify=self._verify_ssl_certificate)
-        filename = request.headers['content-disposition'][21:].strip('"')
-        return filename, request.iter_content(chunk_size=10 * 1024)
+
+        response = self._request('midas.item.download', parameters=parameters, download=True)
+
+        filename = response.headers['content-disposition'][21:].strip('"')
+        return filename, response.iter_content(chunk_size=10 * 1024)
 
     def delete_item(self, token, item_id):
         """
