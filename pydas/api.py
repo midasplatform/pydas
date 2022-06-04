@@ -658,7 +658,8 @@ def _download_item(item_id, path='.', item=None):
         return
     item_path = os.path.join(path, filename)
     if os.path.exists(item_path):
-        if not item:
+        # Always retrieve item to ensure "revisions" data are available
+        if any([item is None, 'revision' not in item]):
             item = session.communicator.item_get(session.token, item_id)
         local_checksum = _streaming_file_md5(item_path)
         remote_checksum = item['revisions'][-1]['bitstreams'][-1]['checksum']
