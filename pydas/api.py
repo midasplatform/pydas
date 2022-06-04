@@ -662,10 +662,17 @@ def _download_item(item_id, path='.', item=None):
         if any([item is None, 'revision' not in item]):
             item = session.communicator.item_get(session.token, item_id)
         local_checksum = _streaming_file_md5(item_path)
-        remote_checksum = item['revisions'][-1]['bitstreams'][-1]['checksum']
+
+        bitstreams = item['revisions'][-1]['bitstreams']
+        if len(bitstreams) == 0:
+            print('WARNING: Skipping download of item_id {0} ({1}): No bitstreams available'.format(item_id, filename))
+            return
+
+        remote_checksum = bitstreams[-1]['checksum']
         if local_checksum == remote_checksum:
             print('Skipping existing file at {0}'.format(item_path))
             return
+
         print('Replacing file at {0}\n   local md5 [{1}]\n  remote md5 [{2}]'.format(
             item_path, local_checksum, remote_checksum))
     else:
