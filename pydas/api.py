@@ -663,6 +663,12 @@ def _download_item(item_id, path='.', item=None):
         return
 
     item_path = os.path.join(path, filename)
+
+    if item['name'] != filename:
+        item_path = os.path.join(path, item['name'])
+        print('WARNING: Using item name as filename for item_id {0}: {1} -> {2}'.format(item_id, filename, item['name']))
+        filename = item['name']
+
     if os.path.exists(item_path):
         local_checksum = _streaming_file_md5(item_path)
 
