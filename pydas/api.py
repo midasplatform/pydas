@@ -651,22 +651,20 @@ def _download_item(item_id, path='.', item=None):
     session.token = verify_credentials()
 
     try:
-        filename, content_iter = session.communicator.download_item(
-            item_id, session.token)
+        filename, content_iter, item = session.communicator.download_item(
+            item_id, session.token, return_item=True)
     except exceptions.HTTPError:
         print('ERROR: Failed to download item_id {0}'.format(item_id))
         return
+
+    bitstreams = item['revisions'][-1]['bitstreams']
+    if len(bitstreams) == 0:
+        print('WARNING: Skipping download of item_id {0} ({1}): No bitstreams available'.format(item_id, filename))
+        return
+
     item_path = os.path.join(path, filename)
     if os.path.exists(item_path):
-        # Always retrieve item to ensure "revisions" data are available
-        if any([item is None, 'revision' not in item]):
-            item = session.communicator.item_get(session.token, item_id)
         local_checksum = _streaming_file_md5(item_path)
-
-        bitstreams = item['revisions'][-1]['bitstreams']
-        if len(bitstreams) == 0:
-            print('WARNING: Skipping download of item_id {0} ({1}): No bitstreams available'.format(item_id, filename))
-            return
 
         remote_checksum = bitstreams[-1]['checksum']
         if local_checksum == remote_checksum:

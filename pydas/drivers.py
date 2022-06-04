@@ -694,7 +694,7 @@ class CoreDriver(BaseDriver):
         response = self.request('midas.item.get', parameters)
         return response
 
-    def download_item(self, item_id, token=None, revision=None):
+    def download_item(self, item_id, token=None, revision=None, return_item=False):
         """
         Download an item to disk.
 
@@ -706,8 +706,10 @@ class CoreDriver(BaseDriver):
         :param revision: (optional) The revision of the item to download, this
             defaults to HEAD.
         :type revision: None | int | long
-        :returns: A tuple of the filename and the content iterator.
-        :rtype: (string, unknown)
+        :param return_item: (optional) If set to True, return item object.
+        :type return_item: bool
+        :returns: A tuple of the filename, the content iterator and the item if return_item is True.
+        :rtype: (string, unknown[, dict])
         """
         parameters = dict()
         parameters['id'] = item_id
@@ -719,7 +721,11 @@ class CoreDriver(BaseDriver):
         response = self._request('midas.item.download', parameters=parameters, download=True)
 
         filename = response.headers['content-disposition'][21:].strip('"')
-        return filename, response.iter_content(chunk_size=10 * 1024)
+        if return_item:
+            return filename, response.iter_content(chunk_size=10 * 1024), \
+                self.item_get(token, item_id)
+        else:
+            return filename, response.iter_content(chunk_size=10 * 1024)
 
     def delete_item(self, token, item_id):
         """
