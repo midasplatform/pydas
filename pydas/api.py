@@ -657,7 +657,12 @@ def _download_item(item_id, path='.', item=None):
         print('ERROR: Failed to download item_id {0}'.format(item_id))
         return
 
-    bitstreams = item['revisions'][-1]['bitstreams']
+    revisions = item.get('revisions', [])
+    if len(revisions) == 0:
+        print('WARNING: Skipping download of item_id {0} ({1}): No revisions available'.format(item_id, filename))
+        return
+
+    bitstreams = revisions[-1].get('bitstreams', [])
     if len(bitstreams) == 0:
         print('WARNING: Skipping download of item_id {0} ({1}): No bitstreams available'.format(item_id, filename))
         return
